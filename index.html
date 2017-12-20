@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/reset.css">
+    <link rel="stylesheet" href="styles/style.css">
+    <title>休憩時間（仮）</title>
+</head>
+<body>
+    <!-- top -->
+    <header>
+        <h1>休憩時間（仮）</h1>
+    </header>
+    <nav id="global_nav">
+        <ul>
+            <li>
+                <a href="#top">TOP</a>
+            </li>
+            <li>
+                    <a href="#graph">グラフ</a>
+                </li>
+                <li>
+                    <a href="#setting">設定</a>
+                </li>
+            </ul>
+        </nav>
+        <div id="top" class="container">
+        <article>
+            <section>
+                <div id="info">
+                    <h1>目標</h1>
+                    <p id="target">目標目標目標目標</p>
+                    <h1>アドバイス</h1>
+                    <p id="advice">アドバイスアドバイスアドバイス</p>
+                </div>
+                <div id="state_btn">
+                    <p id="state_text">REST</p>
+                </div>
+            </section>
+        </article>
+    </div>
+    <!-- graph_area -->
+    <div id="graph" class="container">
+        <article>
+            <section>
+                <h1>活動記録</h1>
+                <h2>今週の記録</h2>
+                <div id="weekly_graph_area">
+                    週刊グラフ
+                </div>
+                <h2>今日の記録</h2>
+                <div id="daily_graph_area">
+                    日刊グラフ
+                </div>
+            </section>
+        </article>
+    </div>
+    <!-- setting -->
+    <div id="setting" class="container">
+        <article>
+            <section>
+                <h1>設定</h1>
+                <h2>目標の設定</h2>
+                <input type="text" id="target_text">
+                <input type="button" id="set_targrt" value="保存">
+                <h2>睡眠時間の設定</h2>
+                <div id="sleep_hours_area">
+                    睡眠時間の設定画面
+                </div>
+                <h2>位置情報の更新</h2>
+                <input type="button" id="location_update" value="位置情報の取得">
+            </section>
+        </article>
+    </div>
+    <script src="scripts/script.js"></script>
+</body>
+</html>

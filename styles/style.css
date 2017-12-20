@@ -1,0 +1,104 @@
+@charset "utf-8";
+
+/* ページ全体 */
+html {
+    font-size: 17px;
+    line-height: 2.1em;
+    letter-spacing: 0.05em;
+    background-color: #eee;
+}
+
+h1 {
+    margin-bottom: 3px;
+    font-size: 20px;
+}
+
+/* ヘッダー */
+header h1 {
+    height: 10vh;
+    font-size: 30px;
+    font-weight: bold;
+    color: #fff;
+    background-color: violet;
+    text-align: center;
+    line-height: 10vh;
+    vertical-align: middle;
+}
+
+/* ナビ */
+#global_nav {
+    height: 5vh;
+    background-color: #555;
+    text-align: center;
+    line-height: 5vh;
+    vertical-align: middle;
+}
+#global_nav ul li {
+    width: 30%;
+    display: inline-block;
+}
+#global_nav ul li a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* top, graph, setting */
+.container {
+    width: 80%;
+    height: 100vh;
+    padding: 0 10%;
+    box-shadow:0px 3px 5px 1px #333;
+}
+
+/* トップ */
+#top {
+    height: 85vh;
+    background-color: #eeb;
+}
+#top section {
+    height: 85vh;;
+}
+#info {
+    height: 30%;
+    /* border: 1px solid #333; */
+}
+#state_btn {
+    height: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* border: 1px solid #333; */
+}
+#state_text {
+    color: #fff;
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 50px;
+    font-weight: bold;
+    text-shadow:2px 1px 1px #333;
+}
+
+/* グラフ */
+#graph {
+    background-color: #bee;
+}
+#weekly_graph_area {
+    width: 100%;
+    height: 40vh;
+    border: 1px solid #555;
+}
+#daily_graph_area {
+    width: 100%;
+    height: 40vh;
+    border: 1px solid #555;
+}
+
+/* 設定 */
+#setting {
+    background-color: #ebe;
+}
+#sleep_hours_area {
+    width: 100%;
+    height: 40vh;
+    border: 1px solid #555;
+}
