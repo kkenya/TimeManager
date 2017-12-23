@@ -10,19 +10,22 @@ class TimeManagerDB {
         }
     }
     open() {
-        const openRequest = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-        openRequest.onsuccess = event => {
-            this.db = event.target.result;
-        };
-        openRequest.onerror = event => {
-            this.handleError(event.target.error);
-        };
-        openRequest.onupgradeneeded = event => {
-            const timesStore = event.currentTarget.result.createObjectStore(this.TIMES_STORE, { keyPath: "id", autoIncrement: true });
-            timesStore.createIndex("id", "id", { unipue: true });
-            const settingsStore = event.currentTarget.result.createObjectStore(this.SETTINGS_STORE, { keyPath: "id", autoIncrement: true });
-            const statusStore = event.currentTarget.result.createObjectStore(this.STATUS_STORE, { keyPath: "id", autoIncrement: true });
-        };
+        return new Promise((resolve, reject) => {
+            const openRequest = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+            openRequest.onsuccess = event => {
+                this.db = event.target.result;
+                resolve();
+            };
+            openRequest.onerror = event => {
+                this.handleError(event.target.error);
+            };
+            openRequest.onupgradeneeded = event => {
+                const timesStore = event.currentTarget.result.createObjectStore(this.TIMES_STORE, { keyPath: "id", autoIncrement: true });
+                timesStore.createIndex("id", "id", { unipue: true });
+                const settingsStore = event.currentTarget.result.createObjectStore(this.SETTINGS_STORE, { keyPath: "id", autoIncrement: true });
+                const statusStore = event.currentTarget.result.createObjectStore(this.STATUS_STORE, { keyPath: "id", autoIncrement: true });
+            };
+        });
     }
     /**
      * @param {string} store_name
@@ -59,16 +62,14 @@ class TimeManagerDB {
             };
         });
     }
-    addStartTimeForTimesStore(startTime) {
+    addStartTimeForTimes(startTime) {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
-        const obj = { startTime: startTime };
-        const request = objectStore.add(obj);
-        request.onsuccess = event => {
-            console.log("TimesStore added.");
-        };
+        const data = { startTime: startTime };
+        const request = objectStore.add(data);
+        request.onsuccess = event => console.log("TimesStore added.");
         request.onerror = event => this.handleError(event.target);
     }
-    editColumnForTimesStore(id, endTime) {
+    editColumnForTimes(id, endTime) {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const request = objectStore.get(id);
         request.onsuccess = event => {
@@ -80,7 +81,7 @@ class TimeManagerDB {
                 const nextStart = moment(endTime).startOf("d");
                 const nextEnd = moment(endTime);
                 const nextRest = nextEnd.diff(nextStart);
-                this.addColumnForTimesStore(nextStart.format('YYYY-MM-DDTHH:mm:ss'), nextEnd.format('YYYY-MM-DDTHH:mm:ss'), nextRest);
+                this.addColumnForTimes(nextStart.format('YYYY-MM-DDTHH:mm:ss'), nextEnd.format('YYYY-MM-DDTHH:mm:ss'), nextRest);
             }
             const rest = end.diff(start);
             data.endTime = end.format('YYYY-MM-DDTHH:mm:ss');
@@ -88,22 +89,44 @@ class TimeManagerDB {
             console.log("upateted data is");
             console.log(data);
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => {
-                console.log("TimesStore updated.");
-            };
+            requestUpdate.onsuccess = event => console.log("TimesStore updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
     }
-    addColumnForTimesStore(startTime, endTime, restTime) {
+    addColumnForTimes(startTime, endTime, restTime) {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
         const request = objectStore.add(data);
         console.log("added data is");
         console.log(data);
+        request.onsuccess = event => console.log("TimesStore added.");
+        request.onerror = event => this.handleError(event.target);
+    }
+    getGoal(callback) {
+        const transaction = this.db.transaction(this.SETTINGS_STORE, "readonly");
+        const objectStore = transaction.objectStore(this.SETTINGS_STORE);
+        let goal;
+        const request = objectStore.get(1);
         request.onsuccess = event => {
-            console.log("TimesStore added.");
+            const data = request.result;
+            goal = data.goal;
+            callback(goal);
         };
+        request.onerror = event => this.handleError(event.target);
+        transaction.oncomplete = () => {
+            return goal;
+        };
+    }
+    addGoalForSettings(goal) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const data = {
+            id: 1,
+            goal: goal
+        };
+        const request = objectStore.put(data);
+        console.log(data);
+        request.onsuccess = event => console.log("SettingsStore updated.");
         request.onerror = event => this.handleError(event.target);
     }
     // public getTimesIds(): Promise<number> {
@@ -119,7 +142,7 @@ class TimeManagerDB {
     //             cursor.continue();
     //         };
     //         request.onerror = e => console.error(e);
-    //         transaction.oncomplete = () => {
+    // nsaction.oncomplete = () => {
     //             resolve(ids);
     //         };
     //     });
