@@ -1,78 +1,81 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
+    <title>休憩時間（仮）</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- css -->
     <link rel="stylesheet" href="styles/reset.css">
     <link rel="stylesheet" href="styles/style.css">
-    <title>休憩時間（仮）</title>
+    <!-- js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment-with-locales.js"></script>
+    <script src="scripts/chart.js" defer></script>
+    <script src="scripts/scroll.js" defer></script>
+    <script src="scripts/TimeManagerDB.js" defer></script>
+    <script src="scripts/script.js" defer></script>
 </head>
+
 <body>
-    <!-- top -->
-    <header>
-        <h1>休憩時間（仮）</h1>
-    </header>
-    <nav id="global_nav">
-        <ul>
-            <li>
-                <a href="#top">TOP</a>
-            </li>
-            <li>
-                    <a href="#graph">グラフ</a>
-                </li>
-                <li>
-                    <a href="#setting">設定</a>
-                </li>
-            </ul>
+    <div id="wrapper">
+        <!-- top -->
+        <header>
+            <h1>Time Manager</h1>
+        </header>
+        <nav id="global_nav">
+            <form id="nav_form">
+                <input type="radio" name="nav" class="nav" id="radio_01" value="#top">
+                <label for="radio_01">top</label>
+                <input type="radio" name="nav" class="nav" id="radio_02" value="#graph">
+                <label for="radio_02">data</label>
+                <input type="radio" name="nav" class="nav" id="radio_03" value="#setting">
+                <label for="radio_03">setting</label>
+            </form>
         </nav>
-        <div id="top" class="container">
-        <article>
+        <div id="top" class="box">
             <section>
                 <div id="info">
                     <h1>目標</h1>
-                    <p id="target">目標目標目標目標</p>
+                    <span id="target">目標目標目標目標</span>
                     <h1>アドバイス</h1>
-                    <p id="advice">アドバイスアドバイスアドバイス</p>
+                    <span id="advice">アドバイスアドバイスアドバイス</span>
                 </div>
                 <div id="state_btn">
-                    <p id="state_text">REST</p>
+                    <span id="btn_text">REST</span>
                 </div>
             </section>
-        </article>
-    </div>
-    <!-- graph_area -->
-    <div id="graph" class="container">
-        <article>
+        </div>
+        <!-- graph_area -->
+        <div id="graph" class="box">
             <section>
                 <h1>活動記録</h1>
                 <h2>今週の記録</h2>
-                <div id="weekly_graph_area">
+                <canvas id="weekly_data_canvas">
                     週刊グラフ
-                </div>
+                </canvas>
                 <h2>今日の記録</h2>
-                <div id="daily_graph_area">
+                <canvas id="daily_data_canvas">
                     日刊グラフ
-                </div>
+                </canvas>
             </section>
-        </article>
-    </div>
-    <!-- setting -->
-    <div id="setting" class="container">
-        <article>
+        </div>
+        <!-- setting -->
+        <div id="setting" class="box">
             <section>
                 <h1>設定</h1>
                 <h2>目標の設定</h2>
                 <input type="text" id="target_text">
                 <input type="button" id="set_targrt" value="保存">
                 <h2>睡眠時間の設定</h2>
-                <div id="sleep_hours_area">
+                <canvas id="sleep_hours_area">
                     睡眠時間の設定画面
-                </div>
+                </canvas>
                 <h2>位置情報の更新</h2>
                 <input type="button" id="location_update" value="位置情報の取得">
             </section>
-        </article>
+        </div>
     </div>
-    <script src="scripts/script.js"></script>
 </body>
+
 </html>
