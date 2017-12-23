@@ -2,7 +2,7 @@
 <html lang="ja">
 
 <head>
-    <title>休憩時間（仮）</title>
+    <title>Time Manager</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- css -->
@@ -33,46 +33,47 @@
                 <label for="radio_03">setting</label>
             </form>
         </nav>
-        <div id="top" class="box">
+        <div id="top" class="page">
             <section>
-                <div id="info">
+                <div class="card">
                     <h1>目標</h1>
-                    <span id="target">目標目標目標目標</span>
+                    <span id="target">きょうもいちにちがんばるぞい！</span>
                     <h1>アドバイス</h1>
-                    <span id="advice">アドバイスアドバイスアドバイス</span>
+                    <span id="advice">進捗どうですか～！？</span>
                 </div>
-                <div id="state_btn">
+                <div id="state_btn" class="card">
                     <span id="btn_text">REST</span>
                 </div>
             </section>
         </div>
         <!-- graph_area -->
-        <div id="graph" class="box">
+        <div id="graph" class="page">
             <section>
-                <h1>活動記録</h1>
-                <h2>今週の記録</h2>
-                <canvas id="weekly_data_canvas">
-                    週刊グラフ
-                </canvas>
-                <h2>今日の記録</h2>
-                <canvas id="daily_data_canvas">
-                    日刊グラフ
-                </canvas>
+                <div class="card">
+                    <h1>今週の記録</h1>
+                    <canvas id="weekly_data_canvas"></canvas>
+                </div>
+                <div class="card">
+                    <h1>今日の記録</h1>
+                    <canvas id="daily_data_canvas"></canvas>
+                </div>
             </section>
         </div>
         <!-- setting -->
-        <div id="setting" class="box">
+        <div id="setting" class="page">
             <section>
-                <h1>設定</h1>
-                <h2>目標の設定</h2>
-                <input type="text" id="target_text">
-                <input type="button" id="set_target" value="保存">
-                <h2>睡眠時間の設定</h2>
-                <canvas id="sleep_hours_area">
-                    睡眠時間の設定画面
-                </canvas>
-                <h2>位置情報の更新</h2>
-                <input type="button" id="location_update" value="位置情報の取得">
+                <div class="card">
+                    <h1>目標の設定</h1>
+                    <input type="text" id="todo_text">
+                    <br>
+                    <input type="button" id="set_todo" value="保存">
+                    <h1>位置情報の設定</h1>
+                    <input type="button" id="location_update" value="位置情報の更新">
+                </div>
+                <div class="card">
+                    <h1>睡眠時間の設定</h1>
+                    <canvas id="sleep_hours_area"></canvas>
+                </div>
             </section>
         </div>
     </div>

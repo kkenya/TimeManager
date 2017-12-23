@@ -3,8 +3,8 @@ const targetElement = document.getElementById("target");
 const adviceElement = document.getElementById("advice");
 const stateBtn = document.getElementById("state_btn");
 const stateText = document.getElementById("btn_text");
-const goalText = document.getElementById("target_text");
-const goalBtn = document.getElementById("set_target");
+const goalText = document.getElementById("todo_text");
+const goalBtn = document.getElementById("set_todo");
 idb.open()
 .then(() => {
     idb.getGoal((goal) => {
@@ -51,6 +51,6 @@ stateBtn.addEventListener("click", function () {
 
 goalBtn.addEventListener("click", () => {
     const goal = goalText.value;
-    console.log(goal);
     idb.addGoalForSettings(goal);
+    targetElement.innerHTML = goal;
 });

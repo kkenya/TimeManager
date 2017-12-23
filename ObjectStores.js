@@ -6,12 +6,12 @@ var Times = {
     startTime: "Date",
     endTime: "Date",
     time: "Date", //入れるか未定
-    sleepTime: "number",
-    restTime: "number"　//second
+    restTime: "number"　//secon
 };
 
 var Settings = {
-    todo: "string",
+    goal: "string",
     advise: "array<string>",
     location: "googleMaps.latLng",
+    sleepTime: "number"
 };

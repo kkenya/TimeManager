@@ -13,23 +13,21 @@ function checkHash(radio) {
     }
 }
 
-navForm.nav[2].checked;
-
-
-const pageHeight = document.querySelector(".box").clientHeight;
-
+const pageHeight = document.querySelector(".page").clientHeight;
 let scrollPosition = 0;
+
 window.addEventListener("scroll", function (eve) {
     scrollPosition = window.scrollY;
     window.requestAnimationFrame(function () {
-        if (scrollPosition > pageHeight && scrollPosition < pageHeight * 2) {
+        if (scrollPosition <= pageHeight / 3) {
+            navForm.nav[0].checked = true;
+            location.hash = checkHash(navForm.nav)            
+        } else if (scrollPosition >= pageHeight / 3 && scrollPosition <= pageHeight) {
             navForm.nav[1].checked = true;
             location.hash = checkHash(navForm.nav)
-        } else if (scrollPosition > pageHeight && scrollPosition > pageHeight * 2) {
+        } else if (scrollPosition >= pageHeight + pageHeight / 3 && scrollPosition <= pageHeight * 2) {
             navForm.nav[2].checked = true;
             location.hash = checkHash(navForm.nav)
-        } else {
-            navForm.nav[0].checked = true;
         }
     });
 });
