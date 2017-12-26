@@ -20,10 +20,23 @@ class TimeManagerDB {
                 this.handleError(event.target.error);
             };
             openRequest.onupgradeneeded = event => {
-                const timesStore = event.currentTarget.result.createObjectStore(this.TIMES_STORE, { keyPath: "id", autoIncrement: true });
-                timesStore.createIndex("id", "id", { unipue: true });
-                const settingsStore = event.currentTarget.result.createObjectStore(this.SETTINGS_STORE, { keyPath: "id", autoIncrement: true });
-                const statusStore = event.currentTarget.result.createObjectStore(this.STATUS_STORE, { keyPath: "id", autoIncrement: true });
+                this.db = event.currentTarget.result;
+                const timesStore = this.db.createObjectStore(this.TIMES_STORE, { keyPath: "id", autoIncrement: true });
+                timesStore.createIndex("id", "id", { unique: true });
+                const settingsStore = this.db.createObjectStore(this.SETTINGS_STORE, { keyPath: "id" });
+                settingsStore.transaction.oncomplete = event => {
+                    const settingsObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+                    const settingsRequest = settingsObjectStore.add({ id: 1, goal: "目標を設定しよう" });
+                    settingsRequest.onsuccess = event => console.log("settingsStore initialized.");
+                    settingsRequest.onerror = event => this.handleError(event.target);
+                };
+                const statusStore = this.db.createObjectStore(this.STATUS_STORE, { keyPath: "id" });
+                statusStore.transaction.oncomplete = event => {
+                    const statusObjectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
+                    const statusRequest = statusObjectStore.add({ id: 1, state: "active" });
+                    statusRequest.onsuccess = event => console.log("statusStore initialized.");
+                    statusRequest.onerror = event => this.handleError(event.target);
+                };
             };
         });
     }
@@ -104,19 +117,24 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
     getGoal(callback) {
-        const transaction = this.db.transaction(this.SETTINGS_STORE, "readonly");
-        const objectStore = transaction.objectStore(this.SETTINGS_STORE);
-        let goal;
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
         const request = objectStore.get(1);
         request.onsuccess = event => {
             const data = request.result;
-            goal = data.goal;
+            const goal = data.goal;
             callback(goal);
         };
         request.onerror = event => this.handleError(event.target);
-        transaction.oncomplete = () => {
-            return goal;
+    }
+    getState(callback) {
+        const objectStore = this.getObjectStore(this.STATUS_STORE, "readonly");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const state = data.state;
+            callback(state);
         };
+        request.onerror = event => this.handleError(event.target);
     }
     addGoalForSettings(goal) {
         const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
@@ -127,6 +145,17 @@ class TimeManagerDB {
         const request = objectStore.put(data);
         console.log(data);
         request.onsuccess = event => console.log("SettingsStore updated.");
+        request.onerror = event => this.handleError(event.target);
+    }
+    addStateForStatus(state) {
+        const objectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
+        const data = {
+            id: 1,
+            state: state
+        };
+        const request = objectStore.put(data);
+        console.log(data);
+        request.onsuccess = event => console.log("StatusStore updated.");
         request.onerror = event => this.handleError(event.target);
     }
     // public getTimesIds(): Promise<number> {
