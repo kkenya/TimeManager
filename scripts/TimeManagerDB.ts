@@ -6,6 +6,7 @@ class TimeManagerDB {
     private db: IDBDatabase;
     private STATUS_STORE: string = "status";
     private TIMES_STORE: string = "Times";
+    private DATE_STORE: string = "Date";
     private SETTINGS_STORE: string = "Settings";
 
     constructor() {
@@ -30,21 +31,31 @@ class TimeManagerDB {
                 const timesStore = this.db.createObjectStore(
                     this.TIMES_STORE, { keyPath: "id", autoIncrement: true }
                 );
+                // todo indexをdateで作成する
                 timesStore.createIndex("id", "id", { unique: true });
+
+                const dateStore = this.db.createObjectStore(
+                    this.DATE_STORE, { keyPath: "id", autoIncrement: true }
+                );
+                dateStore.createIndex("date", "date", { unique: true });
 
                 const settingsStore = this.db.createObjectStore(
                     this.SETTINGS_STORE, { keyPath: "id" }
                 );
+
+                const statusStore = this.db.createObjectStore(
+                    this.STATUS_STORE, { keyPath: "id" }
+                );
+
                 settingsStore.transaction.oncomplete = event => {
+                    console.log("settingsStore transaction oncomplete.");
                     const settingsObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+                    // きょうもいちにちがんばるぞい！
                     const settingsRequest = settingsObjectStore.add({ id: 1, goal: "目標を設定しよう" });
                     settingsRequest.onsuccess = event => console.log("settingsStore initialized.");
                     settingsRequest.onerror = event => this.handleError(event.target);
                 };
 
-                const statusStore = this.db.createObjectStore(
-                    this.STATUS_STORE, { keyPath: "id" }
-                );
                 statusStore.transaction.oncomplete = event => {
                     const statusObjectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
                     const statusRequest = statusObjectStore.add({ id: 1, state: "active" });
@@ -74,7 +85,7 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public getLastTimesId(): Promise<number> {
+    public getLastIdOfTimes(): Promise<number> {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(this.TIMES_STORE, "readonly");
             const objectStore = transaction.objectStore(this.TIMES_STORE);
@@ -94,7 +105,7 @@ class TimeManagerDB {
         });
     }
 
-    public addStartTimeForTimes(startTime: string): void {
+    public addStartTimeOfTimes(startTime: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime };
         const request: IDBRequest = objectStore.add(data);
@@ -102,7 +113,7 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public editColumnForTimes(id: number, endTime: string): void {
+    public editColumnOfTimes(id: number, endTime: string): void {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const request = objectStore.get(id);
         request.onsuccess = event => {
@@ -116,7 +127,8 @@ class TimeManagerDB {
                 const nextStart: moment.Moment = moment(endTime).startOf("d");
                 const nextEnd: moment.Moment = moment(endTime);
                 const nextRest: number = nextEnd.diff(nextStart);
-                this.addColumnForTimes(nextStart.format('YYYY-MM-DDTHH:mm:ss'), nextEnd.format('YYYY-MM-DDTHH:mm:ss'), nextRest);
+                this.addColumnOfTimes(nextStart.format('YYYY-MM-DDTHH:mm:ss'), nextEnd.format('YYYY-MM-DDTHH:mm:ss'), nextRest);
+
             }
 
             const rest: number = end.diff(start);
@@ -128,13 +140,17 @@ class TimeManagerDB {
             console.log(data);
 
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("TimesStore updated.");
+            requestUpdate.onsuccess = event => {
+                console.log("TimesStore updated.");
+                const date: string = moment(data.endTime).format('YYYY-MM-DD');
+                this.addColumnOfDate(date, data.restTime)
+            }
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
     }
 
-    private addColumnForTimes(startTime: string, endTime: string, restTime: number): void {
+    private addColumnOfTimes(startTime: string, endTime: string, restTime: number): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
         const request: IDBRequest = objectStore.add(data);
@@ -146,8 +162,43 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public getGoal(callback) {
-        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+    public getRestTimeOfDate(date: string): any {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
+        const index: IDBIndex = objectStore.index("date");
+        const request: IDBRequest = index.get(date);
+        request.onsuccess = event => {
+            const data = request.result;
+            return data.restTime;
+        }
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    private addColumnOfDate(date: string, restTime: string): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+        const index: IDBIndex = objectStore.index("date");
+        const request: IDBRequest = index.get(date);
+        request.onsuccess = event => {
+            // todo dataの取得方法をどちらにするか
+            // let data = request.result;
+            let data = (<IDBRequest>event.target).result;
+            if (data) {
+                data.restTime += restTime;
+            } else {
+                data = { date: date, restTime: restTime };
+            }
+
+            console.log("added data is");
+            console.log(data);
+
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("DateStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    public getGoalOfSettings(callback): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
         const request = objectStore.get(1);
         request.onsuccess = event => {
             const data = request.result;
@@ -157,18 +208,7 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public getState(callback) {
-        const objectStore = this.getObjectStore(this.STATUS_STORE, "readonly");
-        const request = objectStore.get(1);
-        request.onsuccess = event => {
-            const data = request.result;
-            const state = data.state;
-            callback(state);
-        };
-        request.onerror = event => this.handleError(event.target);
-    }
-
-    public addGoalForSettings(goal: string): void {
+    public addGoalOfSettings(goal: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
         const data = {
             id: 1,
@@ -180,7 +220,18 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public addStateForStatus(state: string): void {
+    public getStateOfStatus(callback) {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.STATUS_STORE, "readonly");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const state = data.state;
+            callback(state);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    public addStateOfStatus(state: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
         const data = {
             id: 1,
@@ -213,45 +264,27 @@ class TimeManagerDB {
     //     });
     // }
 
-    public editData(store_name: string, id: number, obj: any): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(store_name, "readwrite");
-        const request: IDBRequest = objectStore.get(id);
-        request.onsuccess = event => {
-            let data = request.result;
-            console.log("get: " + data);
+    // private deleteTask(store_name: string, id: number) {
+    //     const objectStore: IDBObjectStore = this.getObjectStore(store_name, "readwrite");
+    //     const getRequest = objectStore.get(id);
+    //     getRequest.onsuccess = event => {
+    //         const record = (<IDBRequest>event.target).result;
+    //         console.log("record: " + record);
+    //         if (typeof record == "undefined") {
+    //             this.handleError("No matchiing record found");
+    //             return;
+    //         }
 
-            data = obj;
-            const requestUpdate = objectStore.put(data);
-            console.log("updated: " + data);
-            requestUpdate.onsuccess = event => {
-                console.log("update successs");
-            };
-            requestUpdate.onerror = event => this.handleError(event);
-        };
-        request.onerror = event => this.handleError(event.target);
-    }
-
-    private deleteTask(store_name: string, id: number) {
-        const objectStore: IDBObjectStore = this.getObjectStore(store_name, "readwrite");
-        const getRequest = objectStore.get(id);
-        getRequest.onsuccess = event => {
-            const record = (<IDBRequest>event.target).result;
-            console.log("record: " + record);
-            if (typeof record == "undefined") {
-                this.handleError("No matchiing record found");
-                return;
-            }
-
-            const request = objectStore.delete(id);
-            request.onsuccess = event => {
-                console.log("event:", event);
-                console.log("event.target:", event.target);
-                console.log("event.target.result:", (<IDBRequest>event.target).result);
-            };
-            request.onerror = event => this.handleError(event.target);
-        };
-        getRequest.onerror = event => this.handleError(event.target);
-    }
+    //         const request = objectStore.delete(id);
+    //         request.onsuccess = event => {
+    //             console.log("event:", event);
+    //             console.log("event.target:", event.target);
+    //             console.log("event.target.result:", (<IDBRequest>event.target).result);
+    //         };
+    //         request.onerror = event => this.handleError(event.target);
+    //     };
+    //     getRequest.onerror = event => this.handleError(event.target);
+    // }
 
     // private searchTimesStore(id: number) {
     //     const key: number = id;

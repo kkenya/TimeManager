@@ -7,55 +7,55 @@ const goalText = document.getElementById("todo_text");
 const goalBtn = document.getElementById("set_todo");
 const ACTIVE_STR = "ACT";
 const REST_STR = "REST";
-let status
+let status;
 idb.open()
 .then(() => {
-    idb.getGoal((goal) => {
-        targetElement.innerHTML = goal;
-    });
-    idb.getState((state) => {
-        status = state;
-        if(!status) status = "active";
-        status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
-    });
+// todo do promise
+idb.getGoalOfSettings((goal) => {
+    targetElement.innerHTML = goal;
+});
+idb.getStateOfStatus((state) => {
+    status = state;
+    if(!status) status = "active";
+    status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
+});
 })
 .catch(error => console.error(error));
 
-// if (status == "active") {
-//     stateText.textContent = ACTIVE_STR;
-// }
-// if (status == "rest") {
-//     stateText.textContent = REST_STR;
-// }
-
-stateBtn.addEventListener("click", function () {
-    // const clicked = moment().locale("ja").format('YYYY-MM-DDTHH:mm:ss');
+stateBtn.addEventListener("click", () => {
+    //todo momentインスタンスの作成をDB内の処理として行う
     let clicked = moment().locale("ja").format('YYYY-MM-DDTHH:mm:ss');
 
     if (status == "active") {
         stateText.textContent = REST_STR;
         status = "rest";
-        idb.addStateForStatus(status);
+        idb.addStateOfStatus(status);
 
         const startTime = clicked;
-        idb.addStartTimeForTimes(startTime); // startTimeを保存
+        idb.addStartTimeOfTimes(startTime); // startTimeを保存
     } else if (status == "rest") {
         stateText.textContent = ACTIVE_STR;
         status = "active";
-        idb.addStateForStatus(status);
+        idb.addStateOfStatus(status);
 
         //todo test
         // clicked = moment().add(1, "d").format('YYYY-MM-DDTHH:mm:ss');
 
         const endTime = clicked;
-        idb.getLastTimesId()
-            .then((id) => idb.editColumnForTimes(id, endTime))
+        idb.getLastIdOfTimes()
+            .then((id) => idb.editColumnOfTimes(id, endTime))
             .catch((reason) => console.error(reason));
     }
+
+    const now = moment().format('YYYY-MM-DD');
+    console.log(now);
+    idb.getRestTimeOfDate(now)
+    .then((data) => console.log(data))
+    .catch((reason) => console.log(reason));
 });
 
 goalBtn.addEventListener("click", () => {
     const goal = goalText.value;
-    idb.addGoalForSettings(goal);
+    idb.addGoalOfSettings(goal);
     targetElement.innerHTML = goal;
 });
