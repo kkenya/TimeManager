@@ -163,14 +163,16 @@ class TimeManagerDB {
     }
 
     public getRestTimeOfDate(date: string): any {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
-        const index: IDBIndex = objectStore.index("date");
-        const request: IDBRequest = index.get(date);
-        request.onsuccess = event => {
-            const data = request.result;
-            return data.restTime;
-        }
-        request.onerror = event => this.handleError(event.target);
+        return new Promise((resolve, reject) => {
+            const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
+            const index: IDBIndex = objectStore.index("date");
+            const request: IDBRequest = index.get(date);
+            request.onsuccess = event => {
+                const data = request.result;
+                resolve(data.restTime);
+            }
+            request.onerror = event => this.handleError(event.target);
+        });
     }
 
     private addColumnOfDate(date: string, restTime: string): void {

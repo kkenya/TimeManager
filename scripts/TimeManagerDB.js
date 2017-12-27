@@ -128,7 +128,6 @@ class TimeManagerDB {
     }
     getRestTimeOfDate(date) {
         return new Promise((resolve, reject) => {
-
             const objectStore = this.getObjectStore(this.DATE_STORE, "readonly");
             const index = objectStore.index("date");
             const request = index.get(date);

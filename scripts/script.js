@@ -47,6 +47,8 @@ stateBtn.addEventListener("click", () => {
             .catch((reason) => console.error(reason));
     }
 
+    // todo test
+    // 否定した日にちのrestTimeを取得する
     const now = moment().format('YYYY-MM-DD');
     console.log(now);
     idb.getRestTimeOfDate(now)
