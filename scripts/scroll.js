@@ -21,7 +21,7 @@ window.addEventListener("scroll", function (eve) {
     window.requestAnimationFrame(function () {
         if (scrollPosition <= pageHeight / 3) {
             navForm.nav[0].checked = true;
-            location.hash = checkHash(navForm.nav)            
+            location.hash = checkHash(navForm.nav)
         } else if (scrollPosition >= pageHeight / 3 && scrollPosition <= pageHeight) {
             navForm.nav[1].checked = true;
             location.hash = checkHash(navForm.nav)
@@ -31,3 +31,8 @@ window.addEventListener("scroll", function (eve) {
         }
     });
 });
+
+const tosSetting = document.getElementById("to_setting");
+tosSetting.addEventListener("click", eve => {
+    location.hash = "setting";
+}, true);
