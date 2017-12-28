@@ -15,6 +15,9 @@ class TimeManagerDB {
         }
     }
 
+    /**
+     * データベースを開いた後、初期値の設定を行う
+     */
     public open(): Promise<void> {
         return new Promise((resolve, reject) => {
             const openRequest: IDBOpenDBRequest = indexedDB.open(this.DB_NAME, this.DB_VERSION);
@@ -67,24 +70,21 @@ class TimeManagerDB {
     }
 
     /**
-     * @param {string} store_name
-     * @param {string} mode
+     * オブジェクトストアを取得する
+     * @param storeName オブジェクトストアの名前
+     * @param mode ["readwrite", readonly] トランザクションに指定するモード
+     * @returns 取得したオブジェクトストア
      */
-    private getObjectStore(store_name: string, mode: IDBTransactionMode): IDBObjectStore {
-        const transaction: IDBTransaction = this.db.transaction(store_name, mode);
-        const objectStore = transaction.objectStore(store_name);
+    private getObjectStore(storeName: string, mode: IDBTransactionMode): IDBObjectStore {
+        const transaction: IDBTransaction = this.db.transaction(storeName, mode);
+        const objectStore = transaction.objectStore(storeName);
         return objectStore;
     }
 
-    public clearObjectStore(store_name: string): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(store_name, "readwrite");
-        const request: IDBRequest = objectStore.clear();
-        request.onsuccess = event => {
-            this.handleError(store_name + " cleared");
-        };
-        request.onerror = event => this.handleError(event.target);
-    }
-
+    /**
+     * Timesオブジェクトストアから一番最後のIdを取得する
+     * @returns 最後に保存したデータのId
+     */
     public getLastIdOfTimes(): Promise<number> {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(this.TIMES_STORE, "readonly");
@@ -105,6 +105,10 @@ class TimeManagerDB {
         });
     }
 
+    /**
+     * TimesオブジェクトストアにstartTimeを追加する
+     * @param startTime 休憩時間の開始時 format('YYYY-MM-DDTHH:mm:ss')
+     */
     public addStartTimeOfTimes(startTime: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime };
@@ -113,6 +117,11 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
+    /**
+     * Timesオブジェクトストアのデータを追加し、日を跨いだ場合に新しいデータとして保存する
+     * @param id 追加するデータのid
+     * @param endTime 休憩時間の終了時
+     */
     public editColumnOfTimes(id: number, endTime: string): void {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const request = objectStore.get(id);
@@ -150,6 +159,12 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
+    /**
+     * Timesストアにデータを追加する
+     * @param startTime 休憩を開始した時間
+     * @param endTime 休憩を終了した時間
+     * @param restTime 休憩時間(ミリ秒)
+     */
     private addColumnOfTimes(startTime: string, endTime: string, restTime: number): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
@@ -162,7 +177,12 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public getRestTimeOfDate(date: string): any {
+    /**
+     * Dateオブジェクトストアのデータを日付から検索する
+     * @param date 日にち format('YYYY-MM-DD')
+     * @returns 休憩時間(ミリ秒)
+     */
+    public getRestTimeOfDate(date: string): Promise<number> {
         return new Promise((resolve, reject) => {
             const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
             const index: IDBIndex = objectStore.index("date");
@@ -175,6 +195,11 @@ class TimeManagerDB {
         });
     }
 
+    /**
+     * Dateオブジェクトストアにデータを追加する
+     * @param date 日にち format('YYYY-MM-DD')
+     * @param restTime 休憩時間(ミリ秒)
+     */
     private addColumnOfDate(date: string, restTime: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
         const index: IDBIndex = objectStore.index("date");
@@ -199,7 +224,11 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public getGoalOfSettings(callback): void {
+    /**
+     * SettingsオブジェクトストアからGoal(目標)を取得する
+     * @param callback 取得したGoal(目標)を引数にとるコールバック関数
+     */
+    public getGoalOfSettings(callback: (string) => void): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
         const request = objectStore.get(1);
         request.onsuccess = event => {
@@ -210,6 +239,10 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
+    /**
+     * SettingsオブジェクトストアへGoal(目標)を保存する
+     * @param goal 目標
+     */
     public addGoalOfSettings(goal: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
         const data = {
@@ -222,7 +255,11 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
-    public getStateOfStatus(callback) {
+    /**
+     * Stateオブジェクトストアから休憩の状態("active" or "rest")を取得する
+     * @param callback 取得したStateを引数にとるコールバック関数
+     */
+    public getStateOfStatus(callback: (string) => void): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.STATUS_STORE, "readonly");
         const request = objectStore.get(1);
         request.onsuccess = event => {
@@ -233,6 +270,10 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
 
+    /**
+     * Stateオブジェクトストアに休憩の状態("active" or "rest")を保存する
+     * @param state 休憩の状態("active" or "rest")
+     */
     public addStateOfStatus(state: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
         const data = {
@@ -266,8 +307,8 @@ class TimeManagerDB {
     //     });
     // }
 
-    // private deleteTask(store_name: string, id: number) {
-    //     const objectStore: IDBObjectStore = this.getObjectStore(store_name, "readwrite");
+    // private deleteTask(storeName: string, id: number) {
+    //     const objectStore: IDBObjectStore = this.getObjectStore(storeName, "readwrite");
     //     const getRequest = objectStore.get(id);
     //     getRequest.onsuccess = event => {
     //         const record = (<IDBRequest>event.target).result;
@@ -297,7 +338,11 @@ class TimeManagerDB {
     //     };
     // }
 
-    private handleError(message: any) {
+    /**
+     * コンソールに出力する
+     * @param message 出力するデータ
+     */
+    private handleError(message: any): void {
         console.debug(message);
     }
 
