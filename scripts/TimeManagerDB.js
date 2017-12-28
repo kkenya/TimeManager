@@ -29,36 +29,29 @@ class TimeManagerDB {
                 timesStore.createIndex("id", "id", { unique: true });
                 const dateStore = this.db.createObjectStore(this.DATE_STORE, { keyPath: "id", autoIncrement: true });
                 dateStore.createIndex("date", "date", { unique: true });
-                dateStore.transaction.oncomplete = event => {
-                    const objectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+                const settingsStore = this.db.createObjectStore(this.SETTINGS_STORE, { keyPath: "id" });
+                const statusStore = this.db.createObjectStore(this.STATUS_STORE, { keyPath: "id" });
+                const transaction = event.currentTarget.transaction;
+                transaction.oncomplete = event => {
+
+                    const emptyDateStore = transaction.objectStore(this.DATE_STORE);
                     //todo test
                     for (let i in testDate) {
-                        let request = objectStore.put(testDate[i]);
-                        request.onsuccess = event => console.log(`testDate[${i}] saved`);
-                        request.onerror = event => console.log(event.target);
+                        let daterequest = emptyDateStore.put(testDate[i]);
+                        daterequest.onsuccess = event => console.log(`testDate[${i}] saved`);
+                        daterequest.onerror = event => console.log(event.target);
                     }
+                    const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
+                    const settingsrequest = emptySettingsStore.put({ id: 1, goal: "目標を設定しよう" });
+                    settingsrequest.onsuccess = event => console.log(`${this.SETTINGS_STORE} initialized.`);
+                    settingsrequest.onerror = event => this.handleError(event.target);
+                    const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
+                    const statusrequest = emptyStatusStore.put({ id: 1, state: "active" });
+                    statusrequest.onsuccess = event => console.log(`${this.STATUS_STORE} initialized.`);
+                    statusrequest.onerror = event => this.handleError(event.target);
                 };
-                const settingsStore = this.db.createObjectStore(this.SETTINGS_STORE, { keyPath: "id" });
-                settingsStore.transaction.oncomplete = event => {
-                    this.initObjectStore(this.SETTINGS_STORE, { id: 1, goal: "目標を設定しよう" });
-                };
-                // const statusStore = this.db.createObjectStore(this.STATUS_STORE, { keyPath: "id" });
-                // statusStore.transaction.oncomplete = event => {
-                //     this.initObjectStore(this.STATUS_STORE, { id: 1, state: "active" });
-                // };
             };
         });
-    }
-    /**
-     * オブジェクトストアに初期値を設定する
-     * @param storeName オブジェクトストア名
-     * @param data 追加するデータ
-     */
-    initObjectStore(storeName, data) {
-        const objectStore = this.getObjectStore(storeName, "readwrite");
-        const request = objectStore.put(data);
-        request.onsuccess = event => console.log(`${storeName} initialized.`);
-        request.onerror = event => this.handleError(event.target);
     }
     /**
      * オブジェクトストアを取得する
