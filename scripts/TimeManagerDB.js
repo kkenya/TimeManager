@@ -168,6 +168,11 @@ class TimeManagerDB {
             request.onerror = event => this.handleError(event.target);
         });
     }
+    /**
+     * 1週間の休憩時間を取得する。記録が存在する日のデータのみを返す
+     * @param today 取得したい週に含まれる日付(YYYY-MM-DD)
+     * @returns 1週間のデータ [{date: "", restTime: number(ms)}]
+     */
     getWeekRecordOfDate(today) {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(this.DATE_STORE, "readonly");
@@ -183,7 +188,7 @@ class TimeManagerDB {
                 if (cursor) {
                     const record = cursor.value;
                     const oneDay = {
-                        date: record.date,
+                        date: moment(record.date).locale('ja').format('MM/DD(ddd)'),
                         restTime: record.restTime
                     };
                     weekData.push(oneDay);
