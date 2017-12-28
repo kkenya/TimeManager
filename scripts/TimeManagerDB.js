@@ -49,7 +49,7 @@ class TimeManagerDB {
         });
     }
     /**
-     * データを保存する
+     * オブジェクトストアのデータに初期値を保存する
      * @param objectStore
      * @param data データベース作成時に保存しておくデータ
      */
@@ -169,21 +169,31 @@ class TimeManagerDB {
         });
     }
     getWeekRecordOfDate(today) {
-        const objectStore = this.getObjectStore(this.DATE_STORE, "readonly");
-        const index = objectStore.index("date");
-        const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
-        const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
-        const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
-        const request = index.openCursor(boundKeyRange);
-        request.onsuccess = event => {
-            const cursor = event.target.result;
-            if (cursor) {
-                console.log(cursor.value);
-                cursor.continue();
-            }
-        };
-        // const request: IDBRequest = index.get(firstDate);
-        // this.getObjectStore(this.DATE_STORE, "readonly").get(firstDate).onsuccess
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(this.DATE_STORE, "readonly");
+            const objectStore = transaction.objectStore(this.DATE_STORE);
+            const index = objectStore.index("date");
+            let weekData = [];
+            const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
+            const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
+            const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
+            const request = index.openCursor(boundKeyRange);
+            request.onsuccess = event => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const record = cursor.value;
+                    const oneDay = {
+                        date: record.date,
+                        restTime: record.restTime
+                    };
+                    weekData.push(oneDay);
+                    cursor.continue();
+                }
+            };
+            transaction.oncomplete = event => {
+                resolve(weekData);
+            };
+        });
     }
     /**
      * Dateオブジェクトストアにデータを追加する
@@ -195,8 +205,6 @@ class TimeManagerDB {
         const index = objectStore.index("date");
         const request = index.get(date);
         request.onsuccess = event => {
-            // todo dataの取得方法をどちらにするか
-            // let data = request.result;
             let data = event.target.result;
             if (data) {
                 data.restTime += restTime;
@@ -237,6 +245,7 @@ class TimeManagerDB {
             goal: goal
         };
         const request = objectStore.put(data);
+        console.log("goal is added");
         console.log(data);
         request.onsuccess = event => console.log("SettingsStore updated.");
         request.onerror = event => this.handleError(event.target);

@@ -1,4 +1,4 @@
-import moment from '../node_modules/moment/moment';
+import moment, { weekdays } from '../node_modules/moment/moment';
 import testDate from 'testData.js';
 
 class TimeManagerDB {
@@ -202,25 +202,36 @@ class TimeManagerDB {
         });
     }
 
-    public getWeekRecordOfDate(today: string) {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
-        const index: IDBIndex = objectStore.index("date");
+    public getWeekRecordOfDate(today: string): Promise<Array<{}>> {
+        return new Promise((resolve, reject) => {
 
-        const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
-        const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
+            const transaction: IDBTransaction = this.db.transaction(this.DATE_STORE, "readonly");
+            const objectStore = transaction.objectStore(this.DATE_STORE);
+            const index: IDBIndex = objectStore.index("date");
+            let weekData = [];
 
-        const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
-        const request = index.openCursor(boundKeyRange)
-        request.onsuccess = event => {
-            const cursor = (<IDBRequest>event.target).result;
-            if (cursor) {
-                console.log(cursor.value);
-                cursor.continue();
-            }
-        }
-        // const request: IDBRequest = index.get(firstDate);
-        // this.getObjectStore(this.DATE_STORE, "readonly").get(firstDate).onsuccess
+            const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
+            const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
 
+            const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
+            const request = index.openCursor(boundKeyRange)
+            request.onsuccess = event => {
+                const cursor = (<IDBRequest>event.target).result;
+                if (cursor) {
+                    const record = cursor.value;
+                    const oneDay = {
+                        date: record.date,
+                        restTime: record.restTime
+                    };
+                    weekData.push(oneDay);
+
+                    cursor.continue();
+                }
+            };
+            transaction.oncomplete = event => {
+                resolve(weekData);
+            };
+        });
     }
 
     /**
@@ -233,8 +244,6 @@ class TimeManagerDB {
         const index: IDBIndex = objectStore.index("date");
         const request: IDBRequest = index.get(date);
         request.onsuccess = event => {
-            // todo dataの取得方法をどちらにするか
-            // let data = request.result;
             let data = (<IDBRequest>event.target).result;
             if (data) {
                 data.restTime += restTime;
@@ -278,7 +287,10 @@ class TimeManagerDB {
             goal: goal
         };
         const request = objectStore.put(data);
+
+        console.log("goal is added");
         console.log(data);
+
         request.onsuccess = event => console.log("SettingsStore updated.");
         request.onerror = event => this.handleError(event.target);
     }

@@ -24,38 +24,37 @@ idb.open()
 
 stateBtn.addEventListener("click", () => {
     //todo momentインスタンスの作成をDB内の処理として行う
-    let clicked = moment().locale("ja").format('YYYY-MM-DDTHH:mm:ss');
+    const now = moment().locale("ja").format('YYYY-MM-DDTHH:mm:ss');
 
     if (status == "active") {
         stateText.textContent = REST_STR;
         status = "rest";
         idb.addStateOfStatus(status);
 
-        const startTime = clicked;
-        idb.addStartTimeOfTimes(startTime); // startTimeを保存
+        idb.addStartTimeOfTimes(now); // startTimeを保存
+
     } else if (status == "rest") {
         stateText.textContent = ACTIVE_STR;
         status = "active";
         idb.addStateOfStatus(status);
 
-        //todo test
-        // clicked = moment().add(1, "d").format('YYYY-MM-DDTHH:mm:ss');
-
-        const endTime = clicked;
+        //todo わかりにくいので2つの処理をDB内で完結させる
         idb.getLastIdOfTimes()
-            .then((id) => idb.editColumnOfTimes(id, endTime))
+            .then((id) => idb.editColumnOfTimes(id, now))
             .catch((reason) => console.error(reason));
     }
 
     // todo test
-    // 否定した日にちのrestTimeを取得する
-    const now = moment().format('YYYY-MM-DD');
-    console.log(now);
-    idb.getRestTimeOfDate(now)
+    // 指定した日にちのrestTimeを取得する
+    const today = moment().format('YYYY-MM-DD');
+    idb.getRestTimeOfDate(today)
         .then((data) => console.log(data))
         .catch((reason) => console.log(reason));
-    //todo test
-    idb.getWeekRecordOfDate(now);
+    //1週間の休憩時間を取得する
+    const after = moment().format('YYYY-MM-DD');
+    idb.getWeekRecordOfDate(after)
+    .then((week) => console.log(week))
+    .catch((reason) => console.log(reason));
 });
 
 goalBtn.addEventListener("click", () => {

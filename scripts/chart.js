@@ -1,126 +1,190 @@
+/* グラフのクラス(７日分) */
+class WeeklyChart {
+    constructor(ctx, data, labels, sleepingTime) {
+        this.activeData = new Array(7); // 活動時間
+        this.restData = new Array(7); // 休憩時間
+        this.remainingTime = 86400000; // 24 * 60 * 60 * 1000
 
-let restDatas = [50, 50, 50, 50, 50, 50, 50],
-    activeDatas = [50, 50, 50, 50, 50, 50, 50];
-let dailyRestData = [50, 50];
+        this.option = {
+            responsive: false,
+            title: {
+                display: false
+            },
+            scales: {
+                xAxes: [{
+                    display: true,
+                    stacked: true,
+                    categoryPercentage: 0.3,
+                    ticks: {
+                        fontSize: 10
+                    }
+                }],
+                yAxes: [{
+                    display: true,
+                    stacked: true,
+                    ticks: {
+                        fontSize: 10
+                    }
+                }]
+            },
+            legend: {
+                labels: {
+                    boxWidth: 20,
+                },
+                display: true
+            },
+            tooltips: {
+                mode: 'label',
+                position: 'nearest',
+                titleFontSize: 18,
+                bodyFontSize: 14,
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        return data.labels[tooltipItem.index] +
+                            ": " +
+                            data.datasets[0].data[tooltipItem.index] +
+                            " %";
+                    }
+                }
+            }
+        };
 
-// コンテキストの取得
-const weeklyCtx = document.getElementById("weekly_data_canvas").getContext("2d");
-const dailyCtx = document.getElementById("daily_data_canvas").getContext("2d");
-
-// 週刊データの設定
-const weeklyData = {
-    labels: ["月", "火", "水", "木", "金", "土", "日"],
-    datasets: [{
-            label: '活動時間',
-            data: activeDatas,
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
-            borderWidth: 1
-        },
-        {
-            label: '休憩時間',
-            data: restDatas,
-            backgroundColor: 'rgb(54, 162, 235)',
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 1
+        const chartPrimise = new Promise((resolve, reject) => {
+            // 引数の数の確認
+            if (arguments.length > 4 || arguments.length < 4) {
+                reject("引数の数が正しくない");
+            }
+            // 引数の型の確認
+            else if (ctx && Array.isArray(data) && Array.isArray(labels) && typeof sleepingTime == "number") {
+                for (let i = 0; i < 7; i++) {
+                    data[i] ? resolve() : reject();
+                    labels[i] ? resolve() : reject();
+                }
+                resolve();
+            } else {
+                reject("引数の型が正しくない");
+            }
+        });
+        chartPrimise.then(() => {
+            this.remainingTime = this.remainingTime - sleepingTime;
+            this.chartLabels = labels;  // x軸のラベル
+            this.calculateTimesRate(data);
+            this.data = this.setChartData(this.activeData, this.restData);
+            new Chart(ctx, {
+                type: "bar",
+                data: this.data,
+                options: this.option
+            });
+        }).catch((reason) => {
+            console.log(`err: ${reason}`);
+        });
+    }
+    // 時間を割合に直す
+    calculateTimesRate(restData) {
+        for (let i = 0; i < restData.length; i++) {
+            this.restData[i] = restData[i] / this.remainingTime * 100;
+            this.activeData[i] = 100 - this.restData[i];
         }
-    ]
-}
-// 週刊データのグラフオプション
-const barOption = {
-    responsive: false,
-    title: {
-        display: false
-    },
-    scales: {
-        xAxes: [{
-            display: true,
-            stacked: true,
-            categoryPercentage: 0.3,
-            ticks: {
-                fontSize: 14
-            }
-        }],
-        yAxes: [{
-            display: true,
-            stacked: true,
-            ticks: {
-                fontSize: 12
-            }
-        }]
-    },
-    legend: {
-        labels: {
-            boxWidth: 20,
-        },
-        display: true
-    },
-    tooltips: {
-        mode: 'label',
-        position: 'nearest',
-        titleFontSize: 18,
-        bodyFontSize: 14,
-        callbacks: {
-            label: function (tooltipItem, data) {
-                return data.labels[tooltipItem.index] +
-                    ": " +
-                    data.datasets[0].data[tooltipItem.index] +
-                    " %";
-            }
-        }
+    }
+    // データの設定
+    setChartData(activeData, restData) {
+        return {
+            labels: this.chartLabels,
+            datasets: [{
+                    label: '活動時間',
+                    data: activeData,
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    borderWidth: 1
+                },
+                {
+                    label: '休憩時間',
+                    data: restData,
+                    backgroundColor: 'rgb(54, 162, 235)',
+                    borderColor: 'rgb(54, 162, 235)',
+                    borderWidth: 1
+                }
+            ]
+        };
     }
 }
 
-// 週刊データの棒グラフ
-const barChart = new Chart(weeklyCtx, {
-    type: "bar",
-    data: weeklyData,
-    options: barOption
-});
+// グラフのクラス(１日分)
+class DailyChart {
+    constructor(ctx, data, sleepingTime) {
+        this.activeData; // 活動時間
+        this.restData = new Array(2);
+        this.remainingTime = 86400000; // 24 * 60 * 60 * 1000
 
-// 日刊データの設定
-const dailyData = {
-    labels: ["活動時間", "休憩時間"],
-    datasets: [{
-        data: dailyRestData,
-        backgroundColor: ['rgb(255, 99, 132)', 'rgb(54, 162, 235)']
-    }]
-}
-// 日刊データのグラフオプション
-const doughnutOption = {
-    title: {
-        display: false
-    },
-    responsive: false,
-    animation: {
-        animateRotate: true,
-        animateScale: true
-    },
-    legend: {
-        labels: {
-            boxWidth: 20,
-        },
-        display: true
-    },
-    tooltips: {
-        mode: 'label',
-        position: 'nearest',
-        titleFontSize: 18,
-        bodyFontSize: 14,
-        callbacks: {
-            label: function (tooltipItem, data) {
-                return data.labels[tooltipItem.index] +
-                    ": " +
-                    data.datasets[0].data[tooltipItem.index] +
-                    " %";
+        this.option = {
+            title: {
+                display: false
+            },
+            responsive: false,
+            animation: {
+                animateRotate: true,
+                animateScale: true
+            },
+            legend: {
+                labels: {
+                    boxWidth: 20,
+                },
+                display: true
+            },
+            tooltips: {
+                mode: 'label',
+                position: 'nearest',
+                titleFontSize: 18,
+                bodyFontSize: 14,
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        return data.labels[tooltipItem.index] +
+                            ": " +
+                            data.datasets[0].data[tooltipItem.index] +
+                            " %";
+                    }
+                }
             }
-        }
+        };
+
+        const chartPromise = new Promise((resolve, reject) => {
+            // 引数の数の確認
+            if (arguments.length > 3 || arguments.length < 3) {
+                reject("引数の数が正しくない");
+            }
+            // 引数の型の確認
+            else if (ctx && typeof data == "number" && typeof sleepingTime == "number") {
+                resolve();
+            } else {
+                reject("引数の型が正しくない");
+            }
+        });
+        chartPromise.then(() => {
+            this.remainingTime = this.remainingTime - sleepingTime;
+            this.calculateTimesRate(data);
+            this.data = this.setChartData(this.restData);
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: this.data,
+                options: this.option
+            });
+        }).catch((reason) => {
+            console.log(`err: ${reason}`);
+        });
+    }
+    // 時間を割合に直す
+    calculateTimesRate(restData) {
+        this.restData[0] = restData / this.remainingTime * 100;
+        this.restData[1] = 100 - this.restData[0];
+    }
+    // データの設定
+    setChartData(restData) {
+        return {
+            labels: ["活動時間", "休憩時間"],
+            datasets: [{
+                data: restData,
+                backgroundColor: ['rgb(255, 99, 132)', 'rgb(54, 162, 235)']
+            }]
+        };
     }
 }
-
-// 週刊データの円グラフ
-const doughnutChart = new Chart(dailyCtx, {
-    type: 'doughnut',
-    data: dailyData,
-    options: doughnutOption
-});
