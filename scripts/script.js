@@ -9,18 +9,18 @@ const ACTIVE_STR = "ACT";
 const REST_STR = "REST";
 let status;
 idb.open()
-.then(() => {
-// todo do promise
-idb.getGoalOfSettings((goal) => {
-    targetElement.innerHTML = goal;
-});
-idb.getStateOfStatus((state) => {
-    status = state;
-    if(!status) status = "active";
-    status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
-});
-})
-.catch(error => console.error(error));
+    .then(() => {
+        // todo do promise
+        idb.getGoalOfSettings((goal) => {
+            targetElement.innerHTML = goal;
+        });
+        idb.getStateOfStatus((state) => {
+            status = state;
+            if (!status) status = "active";
+            status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
+        });
+    })
+    .catch(error => console.error(error));
 
 stateBtn.addEventListener("click", () => {
     //todo momentインスタンスの作成をDB内の処理として行う
@@ -52,8 +52,10 @@ stateBtn.addEventListener("click", () => {
     const now = moment().format('YYYY-MM-DD');
     console.log(now);
     idb.getRestTimeOfDate(now)
-    .then((data) => console.log(data))
-    .catch((reason) => console.log(reason));
+        .then((data) => console.log(data))
+        .catch((reason) => console.log(reason));
+    //todo test
+    idb.getWeekRecordOfDate(now);
 });
 
 goalBtn.addEventListener("click", () => {

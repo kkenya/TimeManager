@@ -10,6 +10,9 @@ class TimeManagerDB {
             window.alert("このブラウザは安定板の IndexedDB をサポートしていません。IndexedDB の機能は利用できません。");
         }
     }
+    /**
+     * データベースを開いた後、初期値の設定を行う
+     */
     open() {
         return new Promise((resolve, reject) => {
             const openRequest = indexedDB.open(this.DB_NAME, this.DB_VERSION);
@@ -23,46 +26,55 @@ class TimeManagerDB {
             openRequest.onupgradeneeded = event => {
                 this.db = event.currentTarget.result;
                 const timesStore = this.db.createObjectStore(this.TIMES_STORE, { keyPath: "id", autoIncrement: true });
-                // todo indexをdateで作成する
                 timesStore.createIndex("id", "id", { unique: true });
                 const dateStore = this.db.createObjectStore(this.DATE_STORE, { keyPath: "id", autoIncrement: true });
                 dateStore.createIndex("date", "date", { unique: true });
+                dateStore.transaction.oncomplete = event => {
+                    const objectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+                    //todo test
+                    for (let i in testDate) {
+                        let request = objectStore.put(testDate[i]);
+                        request.onsuccess = event => console.log(`testDate[${i}] saved`);
+                        request.onerror = event => console.log(event.target);
+                    }
+                };
                 const settingsStore = this.db.createObjectStore(this.SETTINGS_STORE, { keyPath: "id" });
-                const statusStore = this.db.createObjectStore(this.STATUS_STORE, { keyPath: "id" });
                 settingsStore.transaction.oncomplete = event => {
-                    console.log("settingsStore transaction oncomplete.");
-                    const settingsObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
-                    // きょうもいちにちがんばるぞい！
-                    const settingsRequest = settingsObjectStore.add({ id: 1, goal: "目標を設定しよう" });
-                    settingsRequest.onsuccess = event => console.log("settingsStore initialized.");
-                    settingsRequest.onerror = event => this.handleError(event.target);
+                    this.initObjectStore(this.SETTINGS_STORE, { id: 1, goal: "目標を設定しよう" });
                 };
-                statusStore.transaction.oncomplete = event => {
-                    const statusObjectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
-                    const statusRequest = statusObjectStore.add({ id: 1, state: "active" });
-                    statusRequest.onsuccess = event => console.log("statusStore initialized.");
-                    statusRequest.onerror = event => this.handleError(event.target);
-                };
+                // const statusStore = this.db.createObjectStore(this.STATUS_STORE, { keyPath: "id" });
+                // statusStore.transaction.oncomplete = event => {
+                //     this.initObjectStore(this.STATUS_STORE, { id: 1, state: "active" });
+                // };
             };
         });
     }
     /**
-     * @param {string} store_name
-     * @param {string} mode
+     * オブジェクトストアに初期値を設定する
+     * @param storeName オブジェクトストア名
+     * @param data 追加するデータ
      */
-    getObjectStore(store_name, mode) {
-        const transaction = this.db.transaction(store_name, mode);
-        const objectStore = transaction.objectStore(store_name);
-        return objectStore;
-    }
-    clearObjectStore(store_name) {
-        const objectStore = this.getObjectStore(store_name, "readwrite");
-        const request = objectStore.clear();
-        request.onsuccess = event => {
-            this.handleError(store_name + " cleared");
-        };
+    initObjectStore(storeName, data) {
+        const objectStore = this.getObjectStore(storeName, "readwrite");
+        const request = objectStore.put(data);
+        request.onsuccess = event => console.log(`${storeName} initialized.`);
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * オブジェクトストアを取得する
+     * @param storeName オブジェクトストアの名前
+     * @param mode ["readwrite", readonly] トランザクションに指定するモード
+     * @returns 取得したオブジェクトストア
+     */
+    getObjectStore(storeName, mode) {
+        const transaction = this.db.transaction(storeName, mode);
+        const objectStore = transaction.objectStore(storeName);
+        return objectStore;
+    }
+    /**
+     * Timesオブジェクトストアから一番最後のIdを取得する
+     * @returns 最後に保存したデータのId
+     */
     getLastIdOfTimes() {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction(this.TIMES_STORE, "readonly");
@@ -71,7 +83,7 @@ class TimeManagerDB {
             const request = objectStore.openCursor(null, "prev");
             request.onsuccess = event => {
                 const cursor = event.target.result;
-                if (!cursor)
+                if (typeof cursor == "undefined")
                     return;
                 id = cursor.key;
             };
@@ -81,6 +93,10 @@ class TimeManagerDB {
             };
         });
     }
+    /**
+     * TimesオブジェクトストアにstartTimeを追加する
+     * @param startTime 休憩時間の開始時 format('YYYY-MM-DDTHH:mm:ss')
+     */
     addStartTimeOfTimes(startTime) {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime };
@@ -88,6 +104,11 @@ class TimeManagerDB {
         request.onsuccess = event => console.log("TimesStore added.");
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * Timesオブジェクトストアのデータを追加し、日を跨いだ場合に新しいデータとして保存する
+     * @param id 追加するデータのid
+     * @param endTime 休憩時間の終了時
+     */
     editColumnOfTimes(id, endTime) {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const request = objectStore.get(id);
@@ -117,6 +138,12 @@ class TimeManagerDB {
         };
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * Timesストアにデータを追加する
+     * @param startTime 休憩を開始した時間
+     * @param endTime 休憩を終了した時間
+     * @param restTime 休憩時間(ミリ秒)
+     */
     addColumnOfTimes(startTime, endTime, restTime) {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
@@ -126,6 +153,11 @@ class TimeManagerDB {
         request.onsuccess = event => console.log("TimesStore added.");
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * Dateオブジェクトストアのデータを日付から検索する
+     * @param date 日にち format('YYYY-MM-DD')
+     * @returns 休憩時間(ミリ秒)
+     */
     getRestTimeOfDate(date) {
         return new Promise((resolve, reject) => {
             const objectStore = this.getObjectStore(this.DATE_STORE, "readonly");
@@ -138,6 +170,28 @@ class TimeManagerDB {
             request.onerror = event => this.handleError(event.target);
         });
     }
+    getWeekRecordOfDate(today) {
+        const objectStore = this.getObjectStore(this.DATE_STORE, "readonly");
+        const index = objectStore.index("date");
+        const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
+        const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
+        const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
+        const request = index.openCursor(boundKeyRange);
+        request.onsuccess = event => {
+            const cursor = event.target.result;
+            if (cursor) {
+                console.log(cursor.value);
+                cursor.continue();
+            }
+        };
+        // const request: IDBRequest = index.get(firstDate);
+        // this.getObjectStore(this.DATE_STORE, "readonly").get(firstDate).onsuccess
+    }
+    /**
+     * Dateオブジェクトストアにデータを追加する
+     * @param date 日にち format('YYYY-MM-DD')
+     * @param restTime 休憩時間(ミリ秒)
+     */
     addColumnOfDate(date, restTime) {
         const objectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
         const index = objectStore.index("date");
@@ -160,6 +214,10 @@ class TimeManagerDB {
         };
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * SettingsオブジェクトストアからGoal(目標)を取得する
+     * @param callback 取得したGoal(目標)を引数にとるコールバック関数
+     */
     getGoalOfSettings(callback) {
         const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
         const request = objectStore.get(1);
@@ -170,6 +228,10 @@ class TimeManagerDB {
         };
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * SettingsオブジェクトストアへGoal(目標)を保存する
+     * @param goal 目標
+     */
     addGoalOfSettings(goal) {
         const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
         const data = {
@@ -181,6 +243,10 @@ class TimeManagerDB {
         request.onsuccess = event => console.log("SettingsStore updated.");
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * Stateオブジェクトストアから休憩の状態("active" or "rest")を取得する
+     * @param callback 取得したStateを引数にとるコールバック関数
+     */
     getStateOfStatus(callback) {
         const objectStore = this.getObjectStore(this.STATUS_STORE, "readonly");
         const request = objectStore.get(1);
@@ -191,6 +257,10 @@ class TimeManagerDB {
         };
         request.onerror = event => this.handleError(event.target);
     }
+    /**
+     * Stateオブジェクトストアに休憩の状態("active" or "rest")を保存する
+     * @param state 休憩の状態("active" or "rest")
+     */
     addStateOfStatus(state) {
         const objectStore = this.getObjectStore(this.STATUS_STORE, "readwrite");
         const data = {
@@ -202,52 +272,10 @@ class TimeManagerDB {
         request.onsuccess = event => console.log("StatusStore updated.");
         request.onerror = event => this.handleError(event.target);
     }
-    // public getTimesIds(): Promise<number> {
-    //     return new Promise((resolve, reject) => {
-    //         const transaction: IDBTransaction = this.db.transaction(this.TIMES_STORE, "readonly");
-    //         const objectStore = transaction.objectStore(this.TIMES_STORE);
-    //         let ids: number[] = new Array();
-    //         const request = objectStore.openCursor();
-    //         request.onsuccess = event => {
-    //             const cursor = (<IDBRequest>event.target).result;
-    //             if (!cursor) return;
-    //             ids.push(cursor.key);
-    //             cursor.continue();
-    //         };
-    //         request.onerror = e => console.error(e);
-    // nsaction.oncomplete = () => {
-    //             resolve(ids);
-    //         };
-    //     });
-    // }
-    // private deleteTask(store_name: string, id: number) {
-    //     const objectStore: IDBObjectStore = this.getObjectStore(store_name, "readwrite");
-    //     const getRequest = objectStore.get(id);
-    //     getRequest.onsuccess = event => {
-    //         const record = (<IDBRequest>event.target).result;
-    //         console.log("record: " + record);
-    //         if (typeof record == "undefined") {
-    //             this.handleError("No matchiing record found");
-    //             return;
-    //         }
-    //         const request = objectStore.delete(id);
-    //         request.onsuccess = event => {
-    //             console.log("event:", event);
-    //             console.log("event.target:", event.target);
-    //             console.log("event.target.result:", (<IDBRequest>event.target).result);
-    //         };
-    //         request.onerror = event => this.handleError(event.target);
-    //     };
-    //     getRequest.onerror = event => this.handleError(event.target);
-    // }
-    // private searchTimesStore(id: number) {
-    //     const key: number = id;
-    //     const objectStore = this.getObjectStore(this.TIMES_STORE, "readonly");
-    //     // const index = objectStore.index("title");
-    //     index.get(key).onsuccess = event () => {
-    //         const data = event.target.result;
-    //     };
-    // }
+    /**
+     * コンソールに出力する
+     * @param message 出力するデータ
+     */
     handleError(message) {
         console.debug(message);
     }
