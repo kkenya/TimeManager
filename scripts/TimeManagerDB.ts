@@ -67,7 +67,7 @@ class TimeManagerDB {
     }
 
     /**
-     * データを保存する
+     * オブジェクトストアのデータに初期値を保存する
      * @param objectStore
      * @param data データベース作成時に保存しておくデータ
      */
