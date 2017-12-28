@@ -1,6 +1,5 @@
 import moment from '../node_modules/moment/moment';
 import testDate from 'testData.js';
-import { read } from 'fs';
 
 class TimeManagerDB {
     private DB_NAME: string = "timeManagerDB"
@@ -52,22 +51,30 @@ class TimeManagerDB {
                 //objectStore method, which you can use to access your object store.
                 const transaction = (<IDBOpenDBRequest>event.currentTarget).transaction;
                 const emptyDateStore = transaction.objectStore(this.DATE_STORE);
+                const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
+                const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
+
+                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう" });
+                this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
                 for (let i in testDate) {
                     let daterequest = emptyDateStore.put(testDate[i]);
                     daterequest.onsuccess = event => console.log(`testDate[${i}] saved`);
                     daterequest.onerror = event => console.log(event.target);
                 }
-                const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
-                const settingsrequest = emptySettingsStore.put({ id: 1, goal: "目標を設定しよう" });
-                settingsrequest.onsuccess = event => console.log(`${this.SETTINGS_STORE} initialized.`);
-                settingsrequest.onerror = event => this.handleError(event.target);
-                const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
-                const statusrequest = emptyStatusStore.put({ id: 1, state: "active" });
-                statusrequest.onsuccess = event => console.log(`${this.STATUS_STORE} initialized.`);
-                statusrequest.onerror = event => this.handleError(event.target);
             };
         });
+    }
+
+    /**
+     * データを保存する
+     * @param objectStore
+     * @param data データベース作成時に保存しておくデータ
+     */
+    private initObjectStore(objectStore: IDBObjectStore, data: object): void {
+        const request = objectStore.put(data);
+        request.onsuccess = event => console.log(`${objectStore.name} initialized.`);
+        request.onerror = event => this.handleError(event.target);
     }
 
     /**
