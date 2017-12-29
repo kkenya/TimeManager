@@ -250,9 +250,6 @@ class TimeManagerDB {
                 data = { date: date, restTime: restTime };
             }
 
-            console.log("added data is");
-            console.log(data);
-
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => console.log("DateStore updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
@@ -320,6 +317,39 @@ class TimeManagerDB {
         request.onsuccess = event => {
             const data = request.result
             data.sleepTime = sleepTime;
+
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        }
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * Settingsオブジェクトストアからアドバイスを取得する
+     * @param callback 取得したアドバイスを引数にとるコールバック関数
+     */
+    public getAdviceOfSettings(callback: (string) => void): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const advice = data.advice;
+            callback(advice);
+        };
+        request.onerror = event => this.handleError(event.target);
+
+    }
+    /**
+     * Settingsオブジェクトストアへアドバイスを保存する
+     * @param advice アドバイス
+     */
+    public addAdviceOfSettings(advice: string): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result
+            data.advice = advice;
 
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => console.log("SettingsStore updated.");

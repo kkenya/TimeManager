@@ -284,6 +284,36 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
     /**
+     * Settingsオブジェクトストアからアドバイスを取得する
+     * @param callback 取得したアドバイスを引数にとるコールバック関数
+     */
+    getAdviceOfSettings(callback) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const advice = data.advice;
+            callback(advice);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+    /**
+     * Settingsオブジェクトストアへアドバイスを保存する
+     * @param advice アドバイス
+     */
+    addAdviceOfSettings(advice) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            data.advice = advice;
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+    /**
      * Settingsオブジェクトストアから緯度経度を取得する
      * @param callback 取得したlatLng(緯度軽度)を引数にとるコールバック関数
      */
