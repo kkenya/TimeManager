@@ -152,9 +152,6 @@ class TimeManagerDB {
             data.endTime = end.format('YYYY-MM-DDTHH:mm:ss');
             data.restTime = rest;
 
-            console.log("upateted data is");
-            console.log(data);
-
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => {
                 console.log("TimesStore updated.");
@@ -176,9 +173,6 @@ class TimeManagerDB {
         const objectStore: IDBObjectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
         const request: IDBRequest = objectStore.add(data);
-
-        console.log("added data is");
-        console.log(data);
 
         request.onsuccess = event => console.log("TimesStore added.");
         request.onerror = event => this.handleError(event.target);
@@ -287,16 +281,50 @@ class TimeManagerDB {
      */
     public addGoalOfSettings(goal: string): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
-        const data = {
-            id: 1,
-            goal: goal
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            data.goal = goal;
+
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        }
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    //todo オブジェクトストアからデータ取得する処理を共通化する
+    //todo 睡眠時間の変数名二単位を含める
+    /**
+     * Settingsオブジェクトストアから睡眠時間を取得する
+     * @param callback 取得したsleepTime(睡眠時間)を引数にとるコールバック関数
+     */
+    public getSleepTimeOfSettings(callback: (number) => void): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const sleepTime = data.sleepTime;
+            callback(sleepTime);
         };
-        const request = objectStore.put(data);
+        request.onerror = event => this.handleError(event.target);
+    }
 
-        console.log("goal is added");
-        console.log(data);
+    /**
+     * Settingsオブジェクトストアへ睡眠時間を保存する
+     * @param sleepTime 睡眠時間
+     */
+    public addSleepTimeOfSettings(sleepTime: number): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result
+            data.sleepTime = sleepTime;
 
-        request.onsuccess = event => console.log("SettingsStore updated.");
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        }
         request.onerror = event => this.handleError(event.target);
     }
 
@@ -326,7 +354,6 @@ class TimeManagerDB {
             state: state
         };
         const request = objectStore.put(data);
-        console.log(data);
         request.onsuccess = event => console.log("StatusStore updated.");
         request.onerror = event => this.handleError(event.target);
     }

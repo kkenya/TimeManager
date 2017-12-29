@@ -19,6 +19,10 @@ idb.open()
             if (!status) status = "active";
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
+        idb.getSleepTimeOfSettings((sleepTime) => {
+            console.log("sleeptime is");
+            console.log(sleepTime);
+        })
     })
     .catch(error => console.error(error));
 
@@ -62,6 +66,9 @@ stateBtn.addEventListener("click", () => {
      *
      *
      */
+
+     const sleepTime = 600000;
+     idb.addSleepTimeOfSettings(sleepTime);
 });
 
 goalBtn.addEventListener("click", () => {

@@ -124,8 +124,6 @@ class TimeManagerDB {
             const rest = end.diff(start);
             data.endTime = end.format('YYYY-MM-DDTHH:mm:ss');
             data.restTime = rest;
-            console.log("upateted data is");
-            console.log(data);
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => {
                 console.log("TimesStore updated.");
@@ -146,8 +144,6 @@ class TimeManagerDB {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
         const request = objectStore.add(data);
-        console.log("added data is");
-        console.log(data);
         request.onsuccess = event => console.log("TimesStore added.");
         request.onerror = event => this.handleError(event.target);
     }
@@ -171,7 +167,7 @@ class TimeManagerDB {
     /**
      * 1週間の休憩時間を取得する。記録が存在する日のデータのみを返す
      * @param today 取得したい週に含まれる日付(YYYY-MM-DD)
-     * @returns 1週間のデータ [{date: "", restTime: number(ms)}]
+     * @returns 1週間のデータ [{date: "MM/DD(dddd)", restTime: number(ms)}]
      */
     getWeekRecordOfDate(today) {
         return new Promise((resolve, reject) => {
@@ -245,14 +241,46 @@ class TimeManagerDB {
      */
     addGoalOfSettings(goal) {
         const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
-        const data = {
-            id: 1,
-            goal: goal
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            data.goal = goal;
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
         };
-        const request = objectStore.put(data);
-        console.log("goal is added");
-        console.log(data);
-        request.onsuccess = event => console.log("SettingsStore updated.");
+        request.onerror = event => this.handleError(event.target);
+    }
+    //todo オブジェクトストアからデータ取得する処理を共通化する
+    //todo 睡眠時間の変数名二単位を含める
+    /**
+     * Settingsオブジェクトストアから睡眠時間を取得する
+     * @param callback 取得したsleepTime(睡眠時間)を引数にとるコールバック関数
+     */
+    getSleepTimeOfSettings(callback) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const sleepTime = data.sleepTime;
+            callback(sleepTime);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+    /**
+     * Settingsオブジェクトストアへ睡眠時間を保存する
+     * @param sleepTime 睡眠時間
+     */
+    addSleepTimeOfSettings(sleepTime) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            data.sleepTime = sleepTime;
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        };
         request.onerror = event => this.handleError(event.target);
     }
     /**
@@ -280,7 +308,6 @@ class TimeManagerDB {
             state: state
         };
         const request = objectStore.put(data);
-        console.log(data);
         request.onsuccess = event => console.log("StatusStore updated.");
         request.onerror = event => this.handleError(event.target);
     }
