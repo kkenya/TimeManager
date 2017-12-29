@@ -54,7 +54,7 @@ class TimeManagerDB {
                 const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
                 const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
 
-                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう" });
+                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 } });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
                 for (let i in testDate) {
@@ -294,7 +294,7 @@ class TimeManagerDB {
     }
 
     //todo オブジェクトストアからデータ取得する処理を共通化する
-    //todo 睡眠時間の変数名二単位を含める
+    //todo 睡眠時間の変数に単位を含める
     /**
      * Settingsオブジェクトストアから睡眠時間を取得する
      * @param callback 取得したsleepTime(睡眠時間)を引数にとるコールバック関数
@@ -320,6 +320,39 @@ class TimeManagerDB {
         request.onsuccess = event => {
             const data = request.result
             data.sleepTime = sleepTime;
+
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        }
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * Settingsオブジェクトストアから緯度経度を取得する
+     * @param callback 取得したlatLng(緯度軽度)を引数にとるコールバック関数
+     */
+    public getLatLngOfSettings(callback: ({ }) => void): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const latLng = data.latLng;
+            callback(latLng);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * Settingsオブジェクトストアへ緯度経度を保存する
+     * @param sleepTime 緯度経度 { lat: number, lng: number }
+     */
+    public addLatLngOfSettings(latLng: { lat: number, lng: number }): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const request: IDBRequest = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result
+            data.latLng = latLng;
 
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => console.log("SettingsStore updated.");

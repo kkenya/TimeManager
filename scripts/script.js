@@ -22,7 +22,11 @@ idb.open()
         idb.getSleepTimeOfSettings((sleepTime) => {
             console.log("sleeptime is");
             console.log(sleepTime);
-        })
+        });
+        idb.getLatLngOfSettings((latLng) => {
+            console.log("latLng is");
+            console.log(latLng);
+        });
     })
     .catch(error => console.error(error));
 
@@ -62,13 +66,15 @@ stateBtn.addEventListener("click", () => {
     idb.getWeekRecordOfDate(after)
     .then((week) => console.log(week))
     .catch((reason) => console.log(reason));
+    //睡眠時間を保存する
+    const sleepTime = 600000;
+    idb.addSleepTimeOfSettings(sleepTime);
+    //緯度経度を取得する
+    idb.addLatLngOfSettings({lat: 0, lng: 0});
     /**
      *
      *
      */
-
-     const sleepTime = 600000;
-     idb.addSleepTimeOfSettings(sleepTime);
 });
 
 goalBtn.addEventListener("click", () => {
