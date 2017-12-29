@@ -23,8 +23,7 @@ idb.open()
     .catch(error => console.error(error));
 
 stateBtn.addEventListener("click", () => {
-    //todo momentインスタンスの作成をDB内の処理として行う
-    const now = moment().locale("ja").add(30, 'days').format('YYYY-MM-DDTHH:mm:ss');
+    const now = moment().locale("ja").format('YYYY-MM-DDTHH:mm:ss');
 
     if (status == "active") {
         stateText.textContent = REST_STR;
