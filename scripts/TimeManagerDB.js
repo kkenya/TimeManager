@@ -159,7 +159,11 @@ class TimeManagerDB {
             const request = index.get(date);
             request.onsuccess = event => {
                 const data = request.result;
-                resolve(data.restTime);
+                if(typeof data == "undefined"){
+                    reject("data not faund");
+                }else{
+                    resolve(data.restTime);
+                }
             };
             request.onerror = event => this.handleError(event.target);
         });
