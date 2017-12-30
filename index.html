@@ -11,6 +11,8 @@
     <!-- js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment-with-locales.js"></script>
+    <!-- todo test用に初期データを保存する -->
+    <script src="scripts/testData.js"></script>
     <script src="scripts/chart.js"></script>
     <script src="scripts/scroll.js" defer></script>
     <script src="scripts/TimeManagerDB.js" defer></script>
@@ -72,7 +74,19 @@
                 </div>
                 <div class="card">
                     <h1>睡眠時間の設定</h1>
-                    <canvas id="sleep_hours_area"></canvas>
+                    <p>睡眠時間
+                        <span id="sleep_hour_output">00</span>:
+                        <span id="sleep_min_output">00</span>
+                    </p>
+                    <input id="sleep_hour" type="range" min="0" max="12" step="1" list="hour_scale" value="0" />
+                    <span id="sleep_hour_label">00</span>/12h
+                    <br>
+                    <input id="sleep_min" type="range" min="0" max="60" step="10" list="min_scale" value="0">
+                    <span id="sleep_min_label">00</span>/59min
+                    <br>
+                    <input type="button" id="submit_sleep_time" value="登録">
+                    <datalist id="hour_scale"></datalist>
+                    <datalist id="min_scale"></datalist>
                 </div>
             </section>
         </div>
