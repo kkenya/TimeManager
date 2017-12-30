@@ -168,3 +168,24 @@ canvas {
     left: 50%;
     transform: translateX(-50%);
 }
+
+input[type="range"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-progress-appearance: none;
+    height: 2px;
+    width: 60%;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.26);
+    vertical-align: middle;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -ms-progress-appearance: none;
+    width: 15px;
+    height: 15px;
+    background-color: #78a6e4;
+    border-radius: 50%;
+}
