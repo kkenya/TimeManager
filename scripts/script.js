@@ -154,8 +154,6 @@ function initChat() {
 
     idb.getWeekRecordOfDate(yesterday)
         .then((weekData) => {
-            console.log(weekData.restTime);
-            console.log(weekData.labels);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const sampleChart1 = new WeeklyChart(ctx1, weekData.restTime, weekData.labels, sleepT);
         })
