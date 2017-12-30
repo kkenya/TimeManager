@@ -19,10 +19,17 @@ idb.open()
             if (!status) status = "active";
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
+        idb.getAdviceOfSettings((advice) => {
+            adviceElement.innerHTML = advice;
+        });
         idb.getSleepTimeOfSettings((sleepTime) => {
             console.log("sleeptime is");
             console.log(sleepTime);
-        })
+        });
+        idb.getLatLngOfSettings((latLng) => {
+            console.log("latLng is");
+            console.log(latLng);
+        });
     })
     .catch(error => console.error(error));
 
@@ -62,13 +69,21 @@ stateBtn.addEventListener("click", () => {
     idb.getWeekRecordOfDate(after)
     .then((week) => console.log(week))
     .catch((reason) => console.log(reason));
+    //睡眠時間を保存する
+    const sleepTime = 600000;
+    idb.addSleepTimeOfSettings(sleepTime);
+    //緯度経度を取得する
+    idb.addLatLngOfSettings({lat: 0, lng: 0});
+    //アドバイスを保存する
+    const testStr = moment().format('HH:mm:ss');
+    idb.addAdviceOfSettings(testStr);
+    idb.getAdviceOfSettings((advice) => {
+        adviceElement.innerHTML = advice;
+    });
     /**
      *
      *
      */
-
-     const sleepTime = 600000;
-     idb.addSleepTimeOfSettings(sleepTime);
 });
 
 goalBtn.addEventListener("click", () => {
