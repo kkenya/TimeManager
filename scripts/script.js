@@ -1,10 +1,10 @@
 const idb = new TimeManagerDB();
 const targetElement = document.getElementById("target");
 const adviceElement = document.getElementById("advice");
-const stateBtn = document.getElementById("state_btn");
 const stateText = document.getElementById("btn_text");
 const goalText = document.getElementById("todo_text");
 const goalBtn = document.getElementById("set_todo");
+const locationBtn = document.getElementById("location_update");
 const ACTIVE_STR = "ACT";
 const REST_STR = "REST";
 let status;
@@ -30,22 +30,24 @@ idb.open()
             console.log("latLng is");
             console.log(latLng);
         });
+        initChat();
     })
     .catch(error => console.error(error));
 
+const stateBtn = document.getElementById("state_btn");
 stateBtn.addEventListener("click", () => {
     const now = moment().locale("ja").format('YYYY-MM-DDTHH:mm:ss');
 
     if (status == "active") {
-        stateText.textContent = REST_STR;
         status = "rest";
+        stateText.textContent = REST_STR;
         idb.addStateOfStatus(status);
 
-        idb.addStartTimeOfTimes(now); // startTimeを保存
+        idb.addStartTimeOfTimes(now);
 
     } else if (status == "rest") {
-        stateText.textContent = ACTIVE_STR;
         status = "active";
+        stateText.textContent = ACTIVE_STR;
         idb.addStateOfStatus(status);
 
         //todo わかりにくいので2つの処理をDB内で完結させる
@@ -53,37 +55,18 @@ stateBtn.addEventListener("click", () => {
             .then((id) => idb.editColumnOfTimes(id, now))
             .catch((reason) => console.error(reason));
     }
+});
 
-    /**
-     *test
-     *
-     */
-    // 指定した日にちのrestTimeを取得する
-    const today = moment().format('YYYY-MM-DD');
-    idb.getRestTimeOfDate(today)
-        .then((data) => console.log(data))
-        .catch((reason) => console.log(reason));
-    //1週間の休憩時間を取得する
-    // const after = moment().add(30, 'days').format('YYYY-MM-DD');
-    const after = moment().format('YYYY-MM-DD');
-    idb.getWeekRecordOfDate(after)
-    .then((week) => console.log(week))
-    .catch((reason) => console.log(reason));
-    //睡眠時間を保存する
-    const sleepTime = 600000;
-    idb.addSleepTimeOfSettings(sleepTime);
+locationBtn.addEventListener("click", () => {
     //緯度経度を取得する
-    idb.addLatLngOfSettings({lat: 0, lng: 0});
+    idb.addLatLngOfSettings({ lat: 0, lng: 0 });
+
     //アドバイスを保存する
     const testStr = moment().format('HH:mm:ss');
     idb.addAdviceOfSettings(testStr);
     idb.getAdviceOfSettings((advice) => {
         adviceElement.innerHTML = advice;
     });
-    /**
-     *
-     *
-     */
 });
 
 goalBtn.addEventListener("click", () => {
@@ -108,6 +91,7 @@ const minLabel = document.getElementById("sleep_min_label");
 let sleepTime = 0;   // 睡眠時間
 
 hourRange.addEventListener("change", function (e) {
+    //分・秒を2桁にそろえる
     hourOutput.innerHTML = ("0" + this.value).slice(-2);
     hourLabel.innerHTML = ("0" + this.value).slice(-2)
 }, true);
@@ -130,10 +114,12 @@ setSleepTime.addEventListener("click", () => {
         sleepTime += parseInt(minRange.value) * 60 * 1000;
     }
     sleepTime += parseInt(hourRange.value) * 60 * 60 * 1000;
-    console.log(sleepTime);
+    idb.addSleepTimeOfSettings(sleepTime);
+    // todo 睡眠時間の初期値を設定する
+    // todo ページ先頭に遷移する
 }, true);
 
-// 睡眠時間(時間)の目盛り
+// 睡眠時間(時間)の目盛りを設定する
 const hourScaleDataList = document.getElementById("hour_scale");
 const hourScaleOption = document.createElement("option");
 for (let i = 0; i < 13; i++) {
@@ -141,7 +127,7 @@ for (let i = 0; i < 13; i++) {
         `<option>${i}</option>`);
 }
 
-// 睡眠時間(分)の目盛り
+// 睡眠時間(分)の目盛りを設定する
 const minScaleDataList = document.getElementById("min_scale");
 const minScaleOption = document.createElement("option");
 for (let i = 0; i < 7; i++) {
@@ -149,23 +135,29 @@ for (let i = 0; i < 7; i++) {
         `<option>${i * 10}</option>`);
 }
 
-// =====================================================
-// グラフの作成を行うクラスのテスト
-// こんな感じで使って 
-// なんか不都合あったら教えて
-// -----------------------------------------------------
-// コンテキスト(テスト用)
-const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d"),
-    ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
-// データ(テスト用)
-let data1 = [18000000, 18000000, 18000000, 18000000, 18000000, 18000000, 18000000],
-    data2 = 18000000;
-// ラベル(テスト用)
-let labels = ["Mon.", "Tues.", "Wed.", "Thurs.", "Fri.", "Sat.", "San."];
-// 睡眠時間(テスト用)
-let sleepT = 8 * 60 * 60 * 1000;
-// 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
-const sampleChart1 = new WeeklyChart(ctx1, data1, labels, sleepT);
-// 一日分のグラフ    WeeklyChart(2Dcontext, array(7)[num], , number)
-let sampleChart2 = new DailyChart(ctx2, data2, sleepT);
-// =====================================================
+function initChat() {
+    const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
+    const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
+    const yesterday = moment().add(-1, "days").format('YYYY-MM-DD');
+    let sleepT = 0;
+
+    idb.getSleepTimeOfSettings((sleepTime) => {
+        sleepT = sleepTime;
+    });
+
+    idb.getRestTimeOfDate(yesterday)
+        .then((data) => {
+            // 一日分のグラフ    WeeklyChart(2Dcontext, array(7)[num], , number)
+            let sampleChart2 = new DailyChart(ctx2, data, sleepT);
+        })
+        .catch((reason) => console.error(reason));
+
+    idb.getWeekRecordOfDate(yesterday)
+        .then((weekData) => {
+            console.log(weekData.restTime);
+            console.log(weekData.labels);
+            // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
+            const sampleChart1 = new WeeklyChart(ctx1, weekData.restTime, weekData.labels, sleepT);
+        })
+        .catch((reason) => console.error(reason));
+}

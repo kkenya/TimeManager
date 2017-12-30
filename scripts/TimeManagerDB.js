@@ -31,13 +31,14 @@ class TimeManagerDB {
                 const statusStore = this.db.createObjectStore(this.STATUS_STORE, { keyPath: "id" });
                 timesStore.createIndex("id", "id", { unique: true });
                 dateStore.createIndex("date", "date", { unique: true });
+                //オブジェクトストアの作成後に初期データの保存を行う
                 //transaction object (IDBTransaction) containing the IDBTransaction.
                 //objectStore method, which you can use to access your object store.
                 const transaction = event.currentTarget.transaction;
                 const emptyDateStore = transaction.objectStore(this.DATE_STORE);
                 const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
                 const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
-                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 } });
+                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, advice: "活動を開始しよう", sleepTime: 77760000 });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
                 for (let i in testDate) {
@@ -49,7 +50,7 @@ class TimeManagerDB {
         });
     }
     /**
-     * オブジェクトストアのデータに初期値を保存する
+     * オブジェクトストアの初期データを保存する
      * @param objectStore
      * @param data データベース作成時に保存しておくデータ
      */
@@ -99,7 +100,7 @@ class TimeManagerDB {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime };
         const request = objectStore.add(data);
-        request.onsuccess = event => console.log("TimesStore added.");
+        request.onsuccess = event => console.log("startTime added.");
         request.onerror = event => this.handleError(event.target);
     }
     /**
@@ -144,7 +145,7 @@ class TimeManagerDB {
         const objectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
         const data = { startTime: startTime, endTime: endTime, restTime: restTime };
         const request = objectStore.add(data);
-        request.onsuccess = event => console.log("TimesStore added.");
+        request.onsuccess = event => console.log("new starttime endtime added.");
         request.onerror = event => this.handleError(event.target);
     }
     /**
@@ -159,9 +160,10 @@ class TimeManagerDB {
             const request = index.get(date);
             request.onsuccess = event => {
                 const data = request.result;
-                if(typeof data == "undefined"){
+                if (typeof data == "undefined") {
                     reject("data not faund");
-                }else{
+                }
+                else {
                     resolve(data.restTime);
                 }
             };
@@ -178,7 +180,7 @@ class TimeManagerDB {
             const transaction = this.db.transaction(this.DATE_STORE, "readonly");
             const objectStore = transaction.objectStore(this.DATE_STORE);
             const index = objectStore.index("date");
-            let weekData = [];
+            const weekData = { labels: [], restTime: [] };
             const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
             const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
             const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
@@ -188,10 +190,11 @@ class TimeManagerDB {
                 if (cursor) {
                     const record = cursor.value;
                     const oneDay = {
-                        date: moment(record.date).locale('ja').format('MM/DD(ddd)'),
+                        label: moment(record.date).locale('ja').format('MM/DD(ddd)'),
                         restTime: record.restTime
                     };
-                    weekData.push(oneDay);
+                    weekData.labels.push(oneDay.label);
+                    weekData.restTime.push(oneDay.restTime);
                     cursor.continue();
                 }
             };
@@ -217,10 +220,8 @@ class TimeManagerDB {
             else {
                 data = { date: date, restTime: restTime };
             }
-            console.log("added data is");
-            console.log(data);
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("DateStore updated.");
+            requestUpdate.onsuccess = event => console.log("date resttime updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
@@ -250,7 +251,7 @@ class TimeManagerDB {
             const data = request.result;
             data.goal = goal;
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onsuccess = event => console.log("goal updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
@@ -282,7 +283,7 @@ class TimeManagerDB {
             const data = request.result;
             data.sleepTime = sleepTime;
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onsuccess = event => console.log("sleeptime updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
@@ -312,7 +313,7 @@ class TimeManagerDB {
             const data = request.result;
             data.advice = advice;
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onsuccess = event => console.log("advice updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
@@ -342,7 +343,7 @@ class TimeManagerDB {
             const data = request.result;
             data.latLng = latLng;
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("SettingsStore updated.");
+            requestUpdate.onsuccess = event => console.log("latlng updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
@@ -372,7 +373,7 @@ class TimeManagerDB {
             state: state
         };
         const request = objectStore.put(data);
-        request.onsuccess = event => console.log("StatusStore updated.");
+        request.onsuccess = event => console.log("state updated.");
         request.onerror = event => this.handleError(event.target);
     }
     /**
