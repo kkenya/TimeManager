@@ -156,7 +156,7 @@ function initChat() {
         .then((weekData) => {
             console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
-            const sampleChart1 = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.slppeTimes);
+            const sampleChart1 = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
         .catch((reason) => console.error(reason));
 }
