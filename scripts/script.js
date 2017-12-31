@@ -147,8 +147,8 @@ function initChat() {
 
     idb.getRestTimeMsOfDate(today)
         .then((data) => {
-            // 一日分のグラフ    WeeklyChart(2Dcontext, array(7)[num], , number)
-            let sampleChart2 = new DailyChart(ctx2, data, todaySleepMs);
+            // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
+            let dailyChart = new DailyChart(ctx2, data, todaySleepMs);
         })
         .catch((reason) => console.error(reason));
 
@@ -156,7 +156,7 @@ function initChat() {
         .then((weekData) => {
             console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
-            const sampleChart1 = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
+            const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
         .catch((reason) => console.error(reason));
 }

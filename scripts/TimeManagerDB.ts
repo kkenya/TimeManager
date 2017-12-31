@@ -304,7 +304,7 @@ class TimeManagerDB {
                 if (cursor) {
                     const record = cursor.value;
                     const oneDay = {
-                        date: moment(record.date).locale('ja').format('MM/DD(ddd)'),
+                        date: moment(record.date).locale('ja').format('DD(ddd)'),
                         restTimeMs: record.restTimeMs,
                         sleepTimeMs: record.sleepTimeMs
                     };
