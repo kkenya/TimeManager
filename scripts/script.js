@@ -22,9 +22,9 @@ idb.open()
         idb.getAdviceOfSettings((advice) => {
             adviceElement.innerHTML = advice;
         });
-        idb.getSleepTimeOfSettings((sleepTime) => {
-            console.log("sleeptime is");
-            console.log(sleepTime);
+        idb.getSleepTimeMsOfDate((sleepTimeMs) => {
+            console.log("sleeptimeMs is");
+            console.log(sleepTimeMs);
         });
         idb.getLatLngOfSettings((latLng) => {
             console.log("latLng is");
@@ -114,7 +114,7 @@ setSleepTime.addEventListener("click", () => {
         sleepTime += parseInt(minRange.value) * 60 * 1000;
     }
     sleepTime += parseInt(hourRange.value) * 60 * 60 * 1000;
-    idb.addSleepTimeOfSettings(sleepTime);
+    idb.addSleepTimeMsOfDate(sleepTime);
     // todo 睡眠時間の初期値を設定する
     // todo ページ先頭に遷移する
 }, true);
@@ -138,24 +138,25 @@ for (let i = 0; i < 7; i++) {
 function initChat() {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
-    const yesterday = moment().add(-1, "days").format('YYYY-MM-DD');
-    let sleepT = 0;
+    const today = moment().format('YYYY-MM-DD');
+    let todaySleepMs = 0;
 
-    idb.getSleepTimeOfSettings((sleepTime) => {
-        sleepT = sleepTime;
+    idb.getSleepTimeMsOfDate((sleepTimeMs) => {
+        todaySleepMs = sleepTimeMs;
     });
 
-    idb.getRestTimeOfDate(yesterday)
+    idb.getRestTimeMsOfDate(today)
         .then((data) => {
             // 一日分のグラフ    WeeklyChart(2Dcontext, array(7)[num], , number)
-            let sampleChart2 = new DailyChart(ctx2, data, sleepT);
+            let sampleChart2 = new DailyChart(ctx2, data, todaySleepMs);
         })
         .catch((reason) => console.error(reason));
 
-    idb.getWeekRecordOfDate(yesterday)
+    idb.getWeekRecordOfDate(today)
         .then((weekData) => {
+            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
-            const sampleChart1 = new WeeklyChart(ctx1, weekData.restTime, weekData.labels, sleepT);
+            const sampleChart1 = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.slppeTimes);
         })
         .catch((reason) => console.error(reason));
 }

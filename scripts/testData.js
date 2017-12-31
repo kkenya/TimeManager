@@ -6,8 +6,8 @@ for (i = 0; i < 15; i++) {
         {
             id: numId++,
             date: moment().startOf('week').add(i, 'days').format('YYYY-MM-DD'),
-            restTime: numRest,
-            sleepTime: 77760000 //6時間
+            restTimeMs: numRest,
+            sleepTimeMs: 77760000 //6時間
         }
     );
 };
