@@ -1,9 +1,11 @@
 /* グラフのクラス(７日分) */
 class WeeklyChart {
     constructor(ctx, data, labels, sleepingTime) {
-        this.activeData = new Array(7); // 活動時間
-        this.restData = new Array(7); // 休憩時間
-        this.remainingTime = 86400000; // 24 * 60 * 60 * 1000
+        this.activeData = new Array(7);     // 活動時間
+        this.restData = new Array(7);       // 休憩時間
+        // ２４時間から睡眠時間を引いた時間
+        // 86400000 = 24h * 60min * 60sec * 1000millsec
+        this.remainingTime = [86400000, 86400000, 86400000, 86400000, 86400000, 86400000, 86400000];
 
         this.option = {
             responsive: false,
@@ -55,7 +57,7 @@ class WeeklyChart {
                 reject("引数の数が正しくない");
             }
             // 引数の型の確認
-            else if (ctx && Array.isArray(data) && Array.isArray(labels) && typeof sleepingTime == "number") {
+            else if (ctx && Array.isArray(data) && Array.isArray(labels) && Array.isArray(sleepingTime)) {
                 for (let i = 0; i < 7; i++) {
                     data[i] ? resolve() : reject();
                     labels[i] ? resolve() : reject();
@@ -66,8 +68,9 @@ class WeeklyChart {
             }
         });
         chartPrimise.then(() => {
-            this.remainingTime = this.remainingTime - sleepingTime;
+            this.setRemainingTime(this.remainingTime, sleepingTime);
             this.chartLabels = labels;  // x軸のラベル
+
             this.calculateTimesRate(data);
             this.data = this.setChartData(this.activeData, this.restData);
             new Chart(ctx, {
@@ -82,8 +85,14 @@ class WeeklyChart {
     // 時間を割合に直す
     calculateTimesRate(restData) {
         for (let i = 0; i < restData.length; i++) {
-            this.restData[i] = restData[i] / this.remainingTime * 100;
+            this.restData[i] = restData[i] / this.remainingTime[i] * 100;
             this.activeData[i] = 100 - this.restData[i];
+        }
+    }
+    // 残り時間の準備
+    setRemainingTime(remainingTime, sleepingTime) {
+        for (let i = 0; i < remainingTime.length; i++) {
+            remainingTime[i] = remainingTime[i] - sleepingTime[i];
         }
     }
     // データの設定
@@ -91,19 +100,19 @@ class WeeklyChart {
         return {
             labels: this.chartLabels,
             datasets: [{
-                    label: '活動時間',
-                    data: activeData,
-                    backgroundColor: 'rgb(255, 99, 132)',
-                    borderColor: 'rgb(255, 99, 132)',
-                    borderWidth: 1
-                },
-                {
-                    label: '休憩時間',
-                    data: restData,
-                    backgroundColor: 'rgb(54, 162, 235)',
-                    borderColor: 'rgb(54, 162, 235)',
-                    borderWidth: 1
-                }
+                label: '活動時間',
+                data: activeData,
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 1
+            },
+            {
+                label: '休憩時間',
+                data: restData,
+                backgroundColor: 'rgb(54, 162, 235)',
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 1
+            }
             ]
         };
     }
