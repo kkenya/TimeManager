@@ -79,7 +79,7 @@ class WeeklyChart {
                 options: this.option
             });
         }).catch((reason) => {
-            console.log(`err: ${reason}`);
+            console.error(reason);
         });
     }
     // 時間を割合に直す
@@ -178,7 +178,7 @@ class DailyChart {
                 options: this.option
             });
         }).catch((reason) => {
-            console.log(`err: ${reason}`);
+            console.log(reason);
         });
     }
     // 時間を割合に直す
@@ -192,7 +192,7 @@ class DailyChart {
             labels: ["活動時間", "休憩時間"],
             datasets: [{
                 data: restData,
-                backgroundColor: ['rgb(255, 99, 132)', 'rgb(54, 162, 235)']
+                backgroundColor: ['rgb(54, 162, 235)', 'rgb(255, 99, 132)']
             }]
         };
     }
