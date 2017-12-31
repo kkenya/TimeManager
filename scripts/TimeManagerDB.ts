@@ -10,6 +10,9 @@ class TimeManagerDB {
     private DATE_STORE: string = "Date";
     private SETTINGS_STORE: string = "Settings";
 
+    /**
+     * indexedDBを利用できるかのチェック
+     */
     constructor() {
         if (!window.indexedDB) {
             window.alert("このブラウザは安定板の IndexedDB をサポートしていません。IndexedDB の機能は利用できません。");
@@ -51,17 +54,17 @@ class TimeManagerDB {
                 //transaction object (IDBTransaction) containing the IDBTransaction.
                 //objectStore method, which you can use to access your object store.
                 const transaction = (<IDBOpenDBRequest>event.currentTarget).transaction;
-                const emptyDateStore = transaction.objectStore(this.DATE_STORE);
                 const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
                 const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
+                const emptyDateStore = transaction.objectStore(this.DATE_STORE);
 
-                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, advice: "活動を開始しよう", sleepTime: 77760000 });
+                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, advice: "活動を開始しよう" });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
                 for (let i in testDate) {
-                    let daterequest = emptyDateStore.put(testDate[i]);
-                    daterequest.onsuccess = event => console.log(`testDate[${i}] saved`);
-                    daterequest.onerror = event => console.log(event.target);
+                    const request = emptyDateStore.put(testDate[i]);
+                    request.onsuccess = event => console.log(`testDate[${i}] saved`);
+                    request.onerror = event => console.log(event.target);
                 }
             };
         });
@@ -114,7 +117,7 @@ class TimeManagerDB {
     }
 
     /**
-     * TimesオブジェクトストアにstartTimeを追加する
+     * Timesオブジェクトストアの新たなデータにstartTimeを追加する
      * @param startTime 休憩時間の開始時 format('YYYY-MM-DDTHH:mm:ss')
      */
     public addStartTimeOfTimes(startTime: string): void {
@@ -126,7 +129,7 @@ class TimeManagerDB {
     }
 
     /**
-     * Timesオブジェクトストアのデータを追加し、日を跨いだ場合に新しいデータとして保存する
+     * TimesオブジェクトストアのデータにendTimeを追加し、日を跨いだ場合に新しいデータとして保存する
      * @param id 追加するデータのid
      * @param endTime 休憩時間の終了時
      */
@@ -135,29 +138,30 @@ class TimeManagerDB {
         const request = objectStore.get(id);
         request.onsuccess = event => {
             const data = request.result;
-            const start: moment.Moment = moment(data.startTime);
-            let end: moment.Moment = moment(endTime);
+            const startMoment: moment.Moment = moment(data.startTime);
+            let endMoment: moment.Moment = moment(endTime);
 
-            if (end.diff(start, "days") > 0) {
-                end = moment(data.startTime).endOf("d");
+            // 日を跨いだ場合endTimeを日の終わりに設定し、
+            // endTimeの日付の始まりをstartTime終わりをendTimeとして新しいデータを保存する
+            if (endMoment.diff(startMoment, "days") > 0) {
+                endMoment = moment(data.startTime).endOf("d");
 
                 const nextStart: moment.Moment = moment(endTime).startOf("d");
                 const nextEnd: moment.Moment = moment(endTime);
-                const nextRest: number = nextEnd.diff(nextStart);
-                this.addColumnOfTimes(nextStart.format('YYYY-MM-DDTHH:mm:ss'), nextEnd.format('YYYY-MM-DDTHH:mm:ss'), nextRest);
-
+                const nextRestMs: number = nextEnd.diff(nextStart);
+                this.addColumnOfTimes(nextStart.format('YYYY-MM-DDTHH:mm:ss'), nextEnd.format('YYYY-MM-DDTHH:mm:ss'), nextRestMs);
             }
 
-            const rest: number = end.diff(start);
-
-            data.endTime = end.format('YYYY-MM-DDTHH:mm:ss');
-            data.restTime = rest;
+            const restTimeMs: number = endMoment.diff(startMoment);
+            data.endTime = endMoment.format('YYYY-MM-DDTHH:mm:ss');
+            data.restTimeMs = restTimeMs;
 
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => {
                 console.log("TimesStore updated.");
+                //その日の休憩時間と睡眠時間を記録する
                 const date: string = moment(data.endTime).format('YYYY-MM-DD');
-                this.addColumnOfDate(date, data.restTime)
+                this.addColumnOfDate(date, data.restTimeMs)
             }
             requestUpdate.onerror = event => this.handleError(event.target);
         };
@@ -168,23 +172,30 @@ class TimeManagerDB {
      * Timesストアにデータを追加する
      * @param startTime 休憩を開始した時間
      * @param endTime 休憩を終了した時間
-     * @param restTime 休憩時間(ミリ秒)
+     * @param restTimeMs 休憩時間(ミリ秒)
      */
-    private addColumnOfTimes(startTime: string, endTime: string, restTime: number): void {
+    private addColumnOfTimes(startTime: string, endTime: string, restTimeMs: number): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.TIMES_STORE, "readwrite");
-        const data = { startTime: startTime, endTime: endTime, restTime: restTime };
+        const data = { startTime: startTime, endTime: endTime, restTimeMs: restTimeMs };
         const request: IDBRequest = objectStore.add(data);
 
-        request.onsuccess = event => console.log("new starttime endtime added.");
+        request.onsuccess = event => {
+            console.log("new starttime endtime added.");
+            const date: string = moment(startTime).format('YYYY-MM-DD');
+            this.getSleepTimeMsOfDate((sleepTime) => {
+                const sleepTimeMs: number = sleepTime
+                this.addColumnOfDate(date, restTimeMs, sleepTimeMs);
+            });
+        };
         request.onerror = event => this.handleError(event.target);
     }
 
     /**
      * Dateオブジェクトストアのデータを日付から検索する
-     * @param date 日にち format('YYYY-MM-DD')
+     * @param date 取得するデータの日付("YYYY-MM-DD")
      * @returns 休憩時間(ミリ秒)
      */
-    public getRestTimeOfDate(date: string): Promise<number> {
+    public getRestTimeMsOfDate(date: string): Promise<number> {
         return new Promise((resolve, reject) => {
             const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
             const index: IDBIndex = objectStore.index("date");
@@ -194,7 +205,7 @@ class TimeManagerDB {
                 if (typeof data == "undefined") {
                     reject("data not faund");
                 } else {
-                    resolve(data.restTime);
+                    resolve(data.restTimeMs);
                 }
             }
             request.onerror = event => this.handleError(event.target);
@@ -202,17 +213,86 @@ class TimeManagerDB {
     }
 
     /**
-     * 1週間の休憩時間を取得する。記録が存在する日のデータのみを返す
-     * @param today 取得したい週に含まれる日付(YYYY-MM-DD)
-     * @returns 1週間のデータ [{date: "MM/DD(dddd)", restTime: number(ms)}]
+     * Dateオブジェクトストアから実行した日付の睡眠時間を取得する
+     * @param callback 取得したsleepTimeMs(睡眠時間)を引数にとるコールバック関数
      */
-    public getWeekRecordOfDate(today: string): Promise<{}> {
-        return new Promise((resolve, reject) => {
+    public getSleepTimeMsOfDate(callback: (number) => void): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
+        const index: IDBIndex = objectStore.index("date");
+        const request: IDBRequest = index.get(moment().format('YYYY-MM-DD'));
+        request.onsuccess = event => {
+            const data = request.result;
+            let sleepTimeMs = 77760000; //データが見つからなかった場合の睡眠時間を6時間にする
+            if (data) {
+                sleepTimeMs = data.sleepTimeMs
+            } else {
+                this.addSleepTimeMsOfDate(sleepTimeMs);
+            }
+            callback(sleepTimeMs);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
 
+    /**
+     * Dateオブジェクトストアへ実行した日付の睡眠時間を保存する
+     * @param sleepTimeMs 睡眠時間
+     */
+    public addSleepTimeMsOfDate(sleepTimeMs: number): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+        const index: IDBIndex = objectStore.index("date");
+        const request: IDBRequest = index.get(moment().format('YYYY-MM-DD'));
+        request.onsuccess = event => {
+            let data = request.result;
+            if (data) {
+                data.sleepTimeMs = sleepTimeMs;
+            } else {
+                data = { date: moment().format("YYYY-MM-DD"), sleepTimeMs: sleepTimeMs };
+            }
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("sleeptime updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        }
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * Dateオブジェクトストアにデータを追加する
+     * @param date 日付("YYYY-MM-DD")
+     * @param restTimeMs 休憩時間(ミリ秒)
+     * @param sleepTimeMs 睡眠時間(ミリ秒) デフォルト値7776000(6時間)
+     */
+    private addColumnOfDate(date: string, restTimeMs: number, sleepTimeMs: number = 77760000): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+        const index: IDBIndex = objectStore.index("date");
+        const request: IDBRequest = index.get(date);
+        request.onsuccess = event => {
+            //todo request.result統一するか
+            let data = (<IDBRequest>event.target).result;
+            if (data) {
+                data.restTimeMs += restTimeMs;
+                data.sleepTimeMs = sleepTimeMs;
+            } else {
+                data = { date: date, restTimeMs: restTimeMs, sleepTimeMs: sleepTimeMs };
+            }
+
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log(`{date(${date}) updated.}`);
+            requestUpdate.onerror = event => this.handleError(event.target);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * 1週間の休憩時間を取得する。記録が存在する日のデータのみを返す
+     * @param today 取得したい週に含まれる日付("YYYY-MM-DD")
+     * @returns 1週間のデータ weekData: { dates: ["MM/DD(dddd)", ...], restTimes: [number(ms), ...], sleepTimes: [number(ms), ...]}
+     */
+    public getWeekRecordOfDate(today: string): Promise<({})> {
+        return new Promise((resolve, reject) => {
             const transaction: IDBTransaction = this.db.transaction(this.DATE_STORE, "readonly");
             const objectStore = transaction.objectStore(this.DATE_STORE);
             const index: IDBIndex = objectStore.index("date");
-            const weekData = {labels: [], restTime: []};
+            const weekData = { dates: [], restTimes: [], sleepTimes: [] };
 
             const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
             const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
@@ -224,11 +304,13 @@ class TimeManagerDB {
                 if (cursor) {
                     const record = cursor.value;
                     const oneDay = {
-                        label: moment(record.date).locale('ja').format('MM/DD(ddd)'),
-                        restTime: record.restTime
+                        date: moment(record.date).locale('ja').format('MM/DD(ddd)'),
+                        restTimeMs: record.restTimeMs,
+                        sleepTimeMs: record.sleepTimeMs
                     };
-                    weekData.labels.push(oneDay.label);
-                    weekData.restTime.push(oneDay.restTime);
+                    weekData.dates.push(oneDay.date);
+                    weekData.restTimes.push(oneDay.restTimeMs);
+                    weekData.sleepTimes.push(oneDay.sleepTimeMs);
 
                     cursor.continue();
                 }
@@ -237,30 +319,6 @@ class TimeManagerDB {
                 resolve(weekData);
             };
         });
-    }
-
-    /**
-     * Dateオブジェクトストアにデータを追加する
-     * @param date 日にち format('YYYY-MM-DD')
-     * @param restTime 休憩時間(ミリ秒)
-     */
-    private addColumnOfDate(date: string, restTime: string): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
-        const index: IDBIndex = objectStore.index("date");
-        const request: IDBRequest = index.get(date);
-        request.onsuccess = event => {
-            let data = (<IDBRequest>event.target).result;
-            if (data) {
-                data.restTime += restTime;
-            } else {
-                data = { date: date, restTime: restTime };
-            }
-
-            const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("date resttime updated.");
-            requestUpdate.onerror = event => this.handleError(event.target);
-        };
-        request.onerror = event => this.handleError(event.target);
     }
 
     /**
@@ -291,41 +349,6 @@ class TimeManagerDB {
 
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => console.log("goal updated.");
-            requestUpdate.onerror = event => this.handleError(event.target);
-        }
-        request.onerror = event => this.handleError(event.target);
-    }
-
-    //todo オブジェクトストアからデータ取得する処理を共通化する
-    //todo 睡眠時間の変数に単位を含める
-    /**
-     * Settingsオブジェクトストアから睡眠時間を取得する
-     * @param callback 取得したsleepTime(睡眠時間)を引数にとるコールバック関数
-     */
-    public getSleepTimeOfSettings(callback: (number) => void): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
-        const request: IDBRequest = objectStore.get(1);
-        request.onsuccess = event => {
-            const data = request.result;
-            const sleepTime = data.sleepTime;
-            callback(sleepTime);
-        };
-        request.onerror = event => this.handleError(event.target);
-    }
-
-    /**
-     * Settingsオブジェクトストアへ睡眠時間を保存する
-     * @param sleepTime 睡眠時間
-     */
-    public addSleepTimeOfSettings(sleepTime: number): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
-        const request: IDBRequest = objectStore.get(1);
-        request.onsuccess = event => {
-            const data = request.result
-            data.sleepTime = sleepTime;
-
-            const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("sleeptime updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         }
         request.onerror = event => this.handleError(event.target);
@@ -368,7 +391,7 @@ class TimeManagerDB {
      * Settingsオブジェクトストアから緯度経度を取得する
      * @param callback 取得したlatLng(緯度軽度)を引数にとるコールバック関数
      */
-    public getLatLngOfSettings(callback: ({ }) => void): void {
+    public getLatLngOfSettings(callback: (latLng: { lat: number, lng: number }) => void): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
         const request: IDBRequest = objectStore.get(1);
         request.onsuccess = event => {
@@ -381,7 +404,7 @@ class TimeManagerDB {
 
     /**
      * Settingsオブジェクトストアへ緯度経度を保存する
-     * @param sleepTime 緯度経度 { lat: number, lng: number }
+     * @param sleepTimeMs 緯度経度 { lat: number, lng: number }
      */
     public addLatLngOfSettings(latLng: { lat: number, lng: number }): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
