@@ -60,7 +60,7 @@ stateBtn.addEventListener("click", () => {
 locationBtn.addEventListener("click", () => {
     //緯度経度を取得する
     idb.addLatLngOfSettings({ lat: 0, lng: 0 });
-
+    //todo 取得した現在地から周囲の建物を取得しアドバイスとして保存する
     //アドバイスを保存する
     const testStr = moment().format('HH:mm:ss');
     idb.addAdviceOfSettings(testStr);
