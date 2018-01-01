@@ -4,6 +4,7 @@
   "description": "",
   "main": "TimeManagerDB.js",
   "dependencies": {
+    "@types/googlemaps": "^3.30.3",
     "moment": "^2.20.1"
   },
   "scripts": {

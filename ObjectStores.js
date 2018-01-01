@@ -18,6 +18,10 @@ var Date = {
 
 var Settings = {
     goal: "string",
-    advice: "array<string>",
     latLng: {lat: "number", lng: "number"}
 };
+
+var Advices = {
+    id: "number",
+    places: "array<string>"
+}

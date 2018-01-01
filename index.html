@@ -16,6 +16,7 @@
     <script src="scripts/chart.js"></script>
     <script src="scripts/scroll.js" defer></script>
     <script src="scripts/TimeManagerDB.js" defer></script>
+    <script src="scripts/TimeManagerGeolocation.js" defer></script>
     <script src="scripts/script.js" defer></script>
 </head>
 
@@ -70,7 +71,9 @@
                     <br>
                     <input type="button" id="set_todo" value="保存">
                     <h1>位置情報の設定</h1>
-                    <input type="button" id="location_update" value="位置情報の更新">
+                    <a href="gmaps.html" target="_blank" id="location_update">位置情報の更新</a>
+                    <!-- todo 学内サーバーにアップロードしwindow.openの実装に変更する -->
+                    <!-- <input type="button" id="location_update" value="位置情報の更新"> -->
                 </div>
                 <div class="card">
                     <h1>睡眠時間の設定</h1>

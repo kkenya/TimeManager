@@ -1,4 +1,5 @@
 const idb = new TimeManagerDB();
+const geo = new TimeManagerGeolocation();
 const targetElement = document.getElementById("target");
 const adviceElement = document.getElementById("advice");
 const stateText = document.getElementById("btn_text");
@@ -19,17 +20,16 @@ idb.open()
             if (!status) status = "active";
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
-        idb.getAdviceOfSettings((advice) => {
-            adviceElement.innerHTML = advice;
+        idb.getActPlacesOfAdvices((places) => {
+            console.log(places);
         });
-        idb.getSleepTimeMsOfDate((sleepTimeMs) => {
-            console.log("sleeptimeMs is");
-            console.log(sleepTimeMs);
+        idb.getRestPlacesOfAdvices((places) => {
+            console.log(places);
         });
-        idb.getLatLngOfSettings((latLng) => {
-            console.log("latLng is");
-            console.log(latLng);
-        });
+        // idb.getLatLngOfSettings((latLng) => {
+        //     console.log("latLng is");
+        //     console.log(latLng);
+        // });
         initChat();
     })
     .catch(error => console.error(error));
@@ -58,15 +58,37 @@ stateBtn.addEventListener("click", () => {
 });
 
 locationBtn.addEventListener("click", () => {
-    //緯度経度を取得する
-    idb.addLatLngOfSettings({ lat: 0, lng: 0 });
-    //todo 取得した現在地から周囲の建物を取得しアドバイスとして保存する
-    //アドバイスを保存する
-    const testStr = moment().format('HH:mm:ss');
-    idb.addAdviceOfSettings(testStr);
-    idb.getAdviceOfSettings((advice) => {
-        adviceElement.innerHTML = advice;
-    });
+    //todo CROSにより現状不可能 window.open(gmaps.html)
+    window.setTimeout(() => {
+        //localStrageからactの割合が多いときに表示する場所を取得する
+        const actPlaces = {name: [], latLng: []};
+        const actLength = localStorage.getItem("actLength");
+        for (i = 0; i < parseInt(actLength); i++) {
+            const nameStr = `actName${i}`;
+            const latStr = `actLat${i}`;
+            const lngStr = `actLng${i}`;
+            const name = localStorage.getItem(nameStr);
+            const lat = localStorage.getItem(latStr);
+            const lng = localStorage.getItem(lngStr);
+            actPlaces.name.push(name);
+            actPlaces.latLng.push({lat: lat, lng: lng});
+        };
+        //localStrageからrestの割合が多いときに表示する場所を取得する
+        const restPlaces = {name: [], latLng: []};
+        const restLength = localStorage.getItem("restLength");
+        for (i = 0; i < parseInt(actLength); i++) {
+            const nameStr = `restName${i}`;
+            const latStr = `restLat${i}`;
+            const lngStr = `restLng${i}`;
+            const name = localStorage.getItem(nameStr);
+            const lat = localStorage.getItem(latStr);
+            const lng = localStorage.getItem(lngStr);
+            restPlaces.name.push(name);
+            restPlaces.latLng.push({lat: lat, lng: lng});
+        };
+        idb.addActPlacesOfAdvices(actPlaces);
+        idb.addRestPlacesOfAdvices(restPlaces);
+    }, 5000);
 });
 
 goalBtn.addEventListener("click", () => {

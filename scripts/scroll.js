@@ -60,43 +60,6 @@ const checkSlected = radio => {
     }
 }
 
-/* モバイル向けの処理 */
-window.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-}, {
-    passive: false
-}, true);
-let scrollDown = false; // スクロールの方向
-let touchStartY = 0; // 画面に触れたときの座標
-
-window.addEventListener("touchstart", function (e) {
-    touchStartY = e.changedTouches[0].pageY;
-}, true);
-window.addEventListener("touchend", function (e) {
-    // スクロールの方向を判定
-    if (e.changedTouches[0].pageY < touchStartY) {
-        scrollDown = true;
-    } else if (e.changedTouches[0].pageY > touchStartY) {
-        scrollDown = false;
-    }
-    // ページの移動
-    if (e.changedTouches[0].pageY > 0 && e.changedTouches[0].pageY < pageHeight && scrollDown) {
-        smoothScroll(1);
-        navForm.nav[1].checked = true;
-    } else if (e.changedTouches[0].pageY > pageHeight && e.changedTouches[0].pageY < pageHeight * 2) {
-        if (scrollDown) {
-            smoothScroll(2);
-            navForm.nav[2].checked = true;
-        } else if (!(scrollDown)) {
-            smoothScroll(0);
-            navForm.nav[0].checked = true;
-        }
-    } else if (e.changedTouches[0].pageY > pageHeight * 2 && e.changedTouches[0].pageY < pageHeight * 3 && scrollDown == false) {
-        smoothScroll(1);
-        navForm.nav[1].checked = true;
-    }
-}, true);
-
 // スクロールアニメーション
 const smoothScroll = (key) => {
     let counter = 0;
