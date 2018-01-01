@@ -1,3 +1,5 @@
+import moment from '../node_modules/moment/moment';
+import testDate from 'testData.js';
 class TimeManagerDB {
     /**
      * indexedDBを利用できるかのチェック

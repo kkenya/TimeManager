@@ -3,80 +3,14 @@
 
 <head>
     <meta charset="utf-8">
-    <!-- 画面をズームしないようにする -->
     <meta name="viewport" content="width=device-width,user-scalable=no" />
-    <!-- Google Maps -->
-    <script type="text/javascript" src="http://maps.google.com/maps/api/js?key=AIzaSyDwB_Y__KNtQHH3g_oyipCrWxh95yTdJUY&sensor=true&libraries=places"></script>
-    <!-- メインプログラム -->
-    <script type="text/javascript">
-        window.onload = function () {
-            var map_div = document.getElementById("map_div");
-            // 初期表示位置を決める
-            var latlng = new google.maps.LatLng(35.6984, 139.7729);
-            // 地図を表示する
-            var gmap = new google.maps.Map(
-                map_div, {
-                    zoom: 16,
-                    center: latlng,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
-                });
-            // 位置情報の取得
-            navigator.geolocation.getCurrentPosition(
-                successCallback,
-                errorCallback);
-            // 成功したとき
-            function successCallback(e) {
-                var lat = e.coords["latitude"];
-                var lng = e.coords["longitude"];
-                latlng = new google.maps.LatLng(lat, lng);
-                gmap.setCenter(latlng);
-
-                //検索パラメータ
-                var request = {
-                    //検索の中心座標
-                    location: latlng,
-                    //検索の範囲(メートル)
-                    radius: '1000',
-                    //検索タイプ:コンビニ
-                    types: ['convenience_store']
-                };
-                //プレイス検索
-                service = new google.maps.places.PlacesService(gmap);
-                service.nearbySearch(request, callback);
-                //検索結果の処理
-                function callback(results, status) {
-                    if (status == google.maps.places.PlacesServiceStatus.OK) {
-                        for (var i = 0; i < results.length; i++) {
-                            createMarker(results[i]);
-                        }
-                    }
-                }
-                //マーカーを表示
-                function createMarker(place) {
-                    var marker = new google.maps.Marker({
-                        position: place.geometry.location,
-                        map: gmap,
-                        title: place.name
-                    });
-                };
-            }
-            // 失敗したとき
-            function errorCallback(e) {
-                alert("現在位置取得失敗:" + e.code);
-            }
-        }
-    </script>
-    <style>
-        * {
-            padding: 0;
-            margin: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="styles/gmaps.css">
+    <script src="http://maps.google.com/maps/api/js?key=AIzaSyDwB_Y__KNtQHH3g_oyipCrWxh95yTdJUY&libraries=places"></script>
+    <script src="scripts/TimeManagerGeolocation.js" defer></script>
 </head>
 
 <body>
-    <!-- 地図の表示場所 -->
-    <div id="map_div" style="width:320px; height:480px;"></div>
+    <div id="map_div"></div>
 </body>
 
 </html>
