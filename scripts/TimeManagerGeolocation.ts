@@ -1,6 +1,7 @@
 class TimeManagerGeolocation {
     private currentPosition: google.maps.LatLng;
     private map: google.maps.Map;
+    private service;
 
     constructor() {
         if (!navigator.geolocation) {
@@ -13,6 +14,7 @@ class TimeManagerGeolocation {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     this.currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    window.alert("現在地を取得しました");
                     resolve(this.currentPosition);
                 }, () => {
                     this.handleLocationError(true);
@@ -21,7 +23,7 @@ class TimeManagerGeolocation {
         });
     }
 
-    public initMap(mapElement: HTMLElement) {
+    public initMap(mapElement: HTMLElement): void {
         const gmap = new google.maps.Map(
             mapElement, {
                 zoom: 16,
@@ -32,26 +34,61 @@ class TimeManagerGeolocation {
         this.map = gmap;
         this.createMarker("現在地", this.currentPosition);
         this.map.setCenter(this.currentPosition);
-        this.requestPlaces(this.currentPosition);
+        this.service = new google.maps.places.PlacesService(this.map);
+        this.requestActPlaces(this.currentPosition);
+        this.requestRestPlaces(this.currentPosition);
+        //ウインドウを閉じる
+        setTimeout(() => {
+            window.open('about:blank','_self').close();
+        }, 2000);
     }
 
-    public requestPlaces(position) {
+    public requestActPlaces(position: google.maps.LatLng): void {
         const request: google.maps.places.TextSearchRequest = {
             location: position,
             radius: 1000, //max 50,000メートル
-            query: "コンビニ",
+            query: "カフェ　図書館",
         };
 
-        const service = new google.maps.places.PlacesService(this.map);
-        service.textSearch(request, (results, status) => {
+        this.service.textSearch(request, (results, status) => {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
+                localStorage.setItem("actLength", results.length.toString());
                 for (var i = 0; i < results.length; i++) {
                     console.log(results[i]);
+                    const nameStr = `actName${i}`;
+                    const latStr = `actLat${i}`;
+                    const lngStr = `actLng${i}`;
+                    localStorage.setItem(nameStr, results[i].name);
+                    localStorage.setItem(latStr, results[i].geometry.location.lat().toString());
+                    localStorage.setItem(lngStr, results[i].geometry.location.lng().toString());
                 }
             }
         });
     }
-    private createMarker(name, location) {
+
+    public requestRestPlaces(position: google.maps.LatLng): void {
+        const request: google.maps.places.TextSearchRequest = {
+            location: position,
+            radius: 1000, //max 50,000メートル
+            query: "飲食店",
+        };
+
+        this.service.textSearch(request, (results, status) => {
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                localStorage.setItem("restLength", results.length.toString());
+                for (var i = 0; i < results.length; i++) {
+                    console.log(results[i]);
+                    const nameStr = `restName${i}`;
+                    const latStr = `restLat${i}`;
+                    const lngStr = `restLng${i}`;
+                    localStorage.setItem(nameStr, results[i].name);
+                    localStorage.setItem(latStr, results[i].geometry.location.lat().toString());
+                    localStorage.setItem(lngStr, results[i].geometry.location.lng().toString());
+                }
+            }
+        });
+    }
+    private createMarker(name: string, location: google.maps.LatLng): void {
         var marker = new google.maps.Marker({
             position: location,
             map: this.map,
@@ -59,16 +96,7 @@ class TimeManagerGeolocation {
         });
     };
 
-    private handleLocationError(browserHasGeolocation) {
+    private handleLocationError(browserHasGeolocation: boolean) {
         window.alert(browserHasGeolocation ? 'エラー: 現在地の取得に失敗しました.' : 'エラー: ブラウザが現在地の取得に対応していません.');
     }
 }
-
-const geo = new TimeManagerGeolocation();
-geo.getPosition()
-    .then((position) => {
-        var mapDiv = document.getElementById("map_div");
-        geo.initMap(mapDiv);
-        // geo.requestPositions();
-    })
-    .catch((reason) => console.error(reason));

@@ -11,7 +11,6 @@
     <!-- js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment-with-locales.js"></script>
-    <script src="http://maps.google.com/maps/api/js?key=AIzaSyDwB_Y__KNtQHH3g_oyipCrWxh95yTdJUY&libraries=places"></script>
     <!-- todo test用に初期データを保存する -->
     <script src="scripts/testData.js"></script>
     <script src="scripts/chart.js"></script>
@@ -72,7 +71,9 @@
                     <br>
                     <input type="button" id="set_todo" value="保存">
                     <h1>位置情報の設定</h1>
-                    <input type="button" id="location_update" value="位置情報の更新">
+                    <a href="gmaps.html" target="_blank" id="location_update">位置情報の更新</a>
+                    <!-- todo 学内サーバーにアップロードしwindow.openの実装に変更する -->
+                    <!-- <input type="button" id="location_update" value="位置情報の更新"> -->
                 </div>
                 <div class="card">
                     <h1>睡眠時間の設定</h1>

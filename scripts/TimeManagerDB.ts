@@ -7,8 +7,9 @@ class TimeManagerDB {
     private db: IDBDatabase;
     private STATUS_STORE: string = "status";
     private TIMES_STORE: string = "Times";
-    private DATE_STORE: string = "Date";
+    private DATES_STORE: string = "Date";
     private SETTINGS_STORE: string = "Settings";
+    private ADVICES_STORE: string = "Advices";
 
     /**
      * indexedDBを利用できるかのチェック
@@ -39,13 +40,16 @@ class TimeManagerDB {
                     this.TIMES_STORE, { keyPath: "id", autoIncrement: true }
                 );
                 const dateStore = this.db.createObjectStore(
-                    this.DATE_STORE, { keyPath: "id", autoIncrement: true }
+                    this.DATES_STORE, { keyPath: "id", autoIncrement: true }
                 );
                 const settingsStore = this.db.createObjectStore(
                     this.SETTINGS_STORE, { keyPath: "id" }
                 );
                 const statusStore = this.db.createObjectStore(
                     this.STATUS_STORE, { keyPath: "id" }
+                );
+                const adviceStore = this.db.createObjectStore(
+                    this.ADVICES_STORE, { keyPath: "id" }
                 );
                 timesStore.createIndex("id", "id", { unique: true });
                 dateStore.createIndex("date", "date", { unique: true });
@@ -56,9 +60,9 @@ class TimeManagerDB {
                 const transaction = (<IDBOpenDBRequest>event.currentTarget).transaction;
                 const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
                 const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
-                const emptyDateStore = transaction.objectStore(this.DATE_STORE);
+                const emptyDateStore = transaction.objectStore(this.DATES_STORE);
 
-                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, advice: "活動を開始しよう" });
+                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 } });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
                 for (let i in testDate) {
@@ -197,7 +201,7 @@ class TimeManagerDB {
      */
     public getRestTimeMsOfDate(date: string): Promise<number> {
         return new Promise((resolve, reject) => {
-            const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
+            const objectStore: IDBObjectStore = this.getObjectStore(this.DATES_STORE, "readonly");
             const index: IDBIndex = objectStore.index("date");
             const request: IDBRequest = index.get(date);
             request.onsuccess = event => {
@@ -217,7 +221,7 @@ class TimeManagerDB {
      * @param callback 取得したsleepTimeMs(睡眠時間)を引数にとるコールバック関数
      */
     public getSleepTimeMsOfDate(callback: (number) => void): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readonly");
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATES_STORE, "readonly");
         const index: IDBIndex = objectStore.index("date");
         const request: IDBRequest = index.get(moment().format('YYYY-MM-DD'));
         request.onsuccess = event => {
@@ -238,7 +242,7 @@ class TimeManagerDB {
      * @param sleepTimeMs 睡眠時間
      */
     public addSleepTimeMsOfDate(sleepTimeMs: number): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATES_STORE, "readwrite");
         const index: IDBIndex = objectStore.index("date");
         const request: IDBRequest = index.get(moment().format('YYYY-MM-DD'));
         request.onsuccess = event => {
@@ -262,7 +266,7 @@ class TimeManagerDB {
      * @param sleepTimeMs 睡眠時間(ミリ秒) デフォルト値7776000(6時間)
      */
     private addColumnOfDate(date: string, restTimeMs: number, sleepTimeMs: number = 77760000): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.DATE_STORE, "readwrite");
+        const objectStore: IDBObjectStore = this.getObjectStore(this.DATES_STORE, "readwrite");
         const index: IDBIndex = objectStore.index("date");
         const request: IDBRequest = index.get(date);
         request.onsuccess = event => {
@@ -289,8 +293,8 @@ class TimeManagerDB {
      */
     public getWeekRecordOfDate(today: string): Promise<({})> {
         return new Promise((resolve, reject) => {
-            const transaction: IDBTransaction = this.db.transaction(this.DATE_STORE, "readonly");
-            const objectStore = transaction.objectStore(this.DATE_STORE);
+            const transaction: IDBTransaction = this.db.transaction(this.DATES_STORE, "readonly");
+            const objectStore = transaction.objectStore(this.DATES_STORE);
             const index: IDBIndex = objectStore.index("date");
             const weekData = { dates: [], restTimes: [], sleepTimes: [] };
 
@@ -355,35 +359,58 @@ class TimeManagerDB {
     }
 
     /**
-     * Settingsオブジェクトストアからアドバイスを取得する
-     * @param callback 取得したアドバイスを引数にとるコールバック関数
+     * Advicesオブジェクトストアから活動場所を取得する
+     * @param callback 取得したカフェ・図書館を引数にとるコールバック関数
      */
-    public getAdviceOfSettings(callback: (string) => void): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+    public getActPlacesOfAdvices(callback: (string) => void): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.ADVICES_STORE, "readonly");
         const request: IDBRequest = objectStore.get(1);
         request.onsuccess = event => {
             const data = request.result;
-            const advice = data.advice;
-            callback(advice);
+            const places = data.places;
+            callback(places);
         };
         request.onerror = event => this.handleError(event.target);
-
     }
-    /**
-     * Settingsオブジェクトストアへアドバイスを保存する
-     * @param advice アドバイス
-     */
-    public addAdviceOfSettings(advice: string): void {
-        const objectStore: IDBObjectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
-        const request: IDBRequest = objectStore.get(1);
-        request.onsuccess = event => {
-            const data = request.result
-            data.advice = advice;
 
-            const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("advice updated.");
-            requestUpdate.onerror = event => this.handleError(event.target);
-        }
+    /**
+     * Advicesオブジェクトストアから活動場所を取得する
+     * @param callback 取得した飲食店を引数にとるコールバック関数
+     */
+    public getRestPlacesOfAdvices(callback: (string) => void): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.ADVICES_STORE, "readonly");
+        const request: IDBRequest = objectStore.get(2);
+        request.onsuccess = event => {
+            const data = request.result;
+            const places = data.places;
+            callback(places);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * Settingsオブジェクトストアへレストの割合が多いときに表示する活動場所を保存する
+     * @param places アドバイスに表示する場所(カフェ・図書館)
+     */
+    public addActPlacesOfAdvices(places: {name: Array<string>, latLng: Array<{}>}): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.ADVICES_STORE, "readwrite");
+        const data = { id: 1, places: places };
+        const request: IDBRequest = objectStore.put(data);
+
+        request.onsuccess = event => console.log("places in Act added.");
+        request.onerror = event => this.handleError(event.target);
+    }
+
+    /**
+     * Settingsオブジェクトストアへアクティブの割合が多いときに表示する休憩場所を保存する
+     * @param places アドバイスに表示する場所(飲食店)
+     */
+    public addRestPlacesOfAdvices(places: {name: Array<string>, latLng: Array<{}>}): void {
+        const objectStore: IDBObjectStore = this.getObjectStore(this.ADVICES_STORE, "readwrite");
+        const data = { id: 2, places: places };
+        const request: IDBRequest = objectStore.put(data);
+
+        request.onsuccess = event => console.log("places in Rest added.");
         request.onerror = event => this.handleError(event.target);
     }
 
