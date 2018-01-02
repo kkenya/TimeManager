@@ -18,6 +18,7 @@
     <script src="scripts/TimeManagerDB.js" defer></script>
     <script src="scripts/TimeManagerGeolocation.js" defer></script>
     <script src="scripts/script.js" defer></script>
+    <script src="scripts/modalWindow.js" defer></script>
 </head>
 
 <body>
@@ -41,7 +42,7 @@
                 <div class="card">
                     <h1 id="to_setting">目標</h1>
                     <span id="target"></span>
-                    <h1>アドバイス</h1>
+                    <h1 id="openModalWindow">アドバイス</h1>
                     <span id="advice"></span>
                 </div>
                 <div id="state_btn" class="card">
@@ -71,7 +72,9 @@
                     <br>
                     <input type="button" id="set_todo" value="保存">
                     <h1>位置情報の設定</h1>
-                    <a href="gmaps.html" target="_blank" id="location_update">位置情報の更新</a>
+                    <button id="location_update_btn">
+                        <a href="gmaps.html" target="_blank" id="location_update">位置情報の更新</a>
+                    </button>
                     <!-- todo 学内サーバーにアップロードしwindow.openの実装に変更する -->
                     <!-- <input type="button" id="location_update" value="位置情報の更新"> -->
                 </div>
