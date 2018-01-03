@@ -9,7 +9,6 @@ class TimeManagerGeolocation {
         return new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition((position) => {
                 this.currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                window.alert("現在地を取得しました");
                 resolve(this.currentPosition);
             }, () => {
                 this.handleLocationError(true);
@@ -31,7 +30,7 @@ class TimeManagerGeolocation {
         //ウインドウを閉じる
         setTimeout(() => {
             window.open('about:blank', '_self').close();
-        }, 2000);
+        }, 4000);
     }
     requestActPlaces(position) {
         const request = {
@@ -47,9 +46,11 @@ class TimeManagerGeolocation {
                     const nameStr = `actName${i}`;
                     const latStr = `actLat${i}`;
                     const lngStr = `actLng${i}`;
+                    const placeIdStr = `actPlaceId${i}`;
                     localStorage.setItem(nameStr, results[i].name);
                     localStorage.setItem(latStr, results[i].geometry.location.lat().toString());
                     localStorage.setItem(lngStr, results[i].geometry.location.lng().toString());
+                    localStorage.setItem(placeIdStr, results[i].place_id);
                 }
             }
         });
@@ -68,21 +69,34 @@ class TimeManagerGeolocation {
                     const nameStr = `restName${i}`;
                     const latStr = `restLat${i}`;
                     const lngStr = `restLng${i}`;
+                    const placeIdStr = `restPlaceId${i}`;
                     localStorage.setItem(nameStr, results[i].name);
                     localStorage.setItem(latStr, results[i].geometry.location.lat().toString());
                     localStorage.setItem(lngStr, results[i].geometry.location.lng().toString());
+                    localStorage.setItem(placeIdStr, results[i].place_id);
                 }
             }
         });
     }
     createMarker(name, location) {
-        var marker = new google.maps.Marker({
+        const marker = new google.maps.Marker({
             position: location,
             map: this.map,
             title: name
         });
+        const infowindow = new google.maps.InfoWindow({
+            content: "現在地を取得しました",
+        });
+        infowindow.open(this.map, marker);
+
+        setTimeout((() => {
+            const closeInfo = new google.maps.InfoWindow({
+                content: "</br></br><h1>ウインドウを閉じます</h1></br></br>",
+            });
+            infowindow.close();
+            closeInfo.open(this.map, marker);
+        }), 2000);
     }
-    ;
     handleLocationError(browserHasGeolocation) {
         window.alert(browserHasGeolocation ? 'エラー: 現在地の取得に失敗しました.' : 'エラー: ブラウザが現在地の取得に対応していません.');
     }

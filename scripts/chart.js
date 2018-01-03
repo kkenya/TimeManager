@@ -25,6 +25,8 @@ class WeeklyChart {
                     display: true,
                     stacked: true,
                     ticks: {
+                        min: 0,
+                        max: 100,
                         fontSize: 10
                     }
                 }]

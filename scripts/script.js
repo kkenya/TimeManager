@@ -10,26 +10,42 @@ const ACTIVE_STR = "ACT";
 const REST_STR = "REST";
 let status;
 idb.open()
-    .then(() => {
-        // todo do promise
-        idb.getGoalOfSettings((goal) => {
-            targetElement.innerHTML = goal;
+.then(() => {
+    // todo do promise
+    idb.getGoalOfSettings((goal) => {
+        targetElement.innerHTML = goal;
         });
         idb.getStateOfStatus((state) => {
             status = state;
             if (!status) status = "active";
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
-        idb.getActPlacesOfAdvices((places) => {
-            console.log(places);
-        });
-        idb.getRestPlacesOfAdvices((places) => {
-            console.log(places);
-        });
-        // idb.getLatLngOfSettings((latLng) => {
-        //     console.log("latLng is");
-        //     console.log(latLng);
-        // });
+        const ration = { active: 60, rest: 40 };
+        if (ration.active > ration.rest) {
+            idb.getActPlacesOfAdvices((places) => {
+                console.log(places);
+                adviceElement.innerHTML = "気分転換しませんか？";
+                const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
+                const destPlace = {
+                    latLng: places.latLng[randomNum],
+                    name: places.name[randomNum],
+                    placeId: places.placeId[randomNum]
+                };
+                initModalWindow(destPlace);
+            });
+        } else {
+            idb.getRestPlacesOfAdvices((places) => {
+                console.log(places);
+                adviceElement.innerHTML = "休憩しませんか？";
+                const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
+                const destPlace = {
+                    latLng: places.latLng[randomNum],
+                    name: places.name[randomNum],
+                    placeId: places.placeId[randomNum]
+                };
+                initModalWindow(destPlace);
+            });
+        }
         initChat();
     })
     .catch(error => console.error(error));
@@ -61,30 +77,36 @@ locationBtn.addEventListener("click", () => {
     //todo CROSにより現状不可能 window.open(gmaps.html)
     window.setTimeout(() => {
         //localStrageからactの割合が多いときに表示する場所を取得する
-        const actPlaces = {name: [], latLng: []};
+        const actPlaces = { name: [], latLng: [], placeId: [] };
         const actLength = localStorage.getItem("actLength");
         for (i = 0; i < parseInt(actLength); i++) {
             const nameStr = `actName${i}`;
             const latStr = `actLat${i}`;
             const lngStr = `actLng${i}`;
+            const placeIdStr = `actPlaceId${i}`
             const name = localStorage.getItem(nameStr);
-            const lat = localStorage.getItem(latStr);
-            const lng = localStorage.getItem(lngStr);
+            const lat = parseFloat(localStorage.getItem(latStr));
+            const lng = parseFloat(localStorage.getItem(lngStr));
+            const placeId = localStorage.getItem(placeIdStr);
             actPlaces.name.push(name);
-            actPlaces.latLng.push({lat: lat, lng: lng});
+            actPlaces.latLng.push({ lat: lat, lng: lng });
+            actPlaces.placeId.push(placeId);
         };
         //localStrageからrestの割合が多いときに表示する場所を取得する
-        const restPlaces = {name: [], latLng: []};
+        const restPlaces = { name: [], latLng: [], placeId: [] };
         const restLength = localStorage.getItem("restLength");
         for (i = 0; i < parseInt(actLength); i++) {
             const nameStr = `restName${i}`;
             const latStr = `restLat${i}`;
             const lngStr = `restLng${i}`;
+            const placeIdStr = `restPlaceId${i}`
             const name = localStorage.getItem(nameStr);
-            const lat = localStorage.getItem(latStr);
-            const lng = localStorage.getItem(lngStr);
+            const lat = parseFloat(localStorage.getItem(latStr));
+            const lng = parseFloat(localStorage.getItem(lngStr));
+            const placeId = localStorage.getItem(placeIdStr);
             restPlaces.name.push(name);
-            restPlaces.latLng.push({lat: lat, lng: lng});
+            restPlaces.latLng.push({ lat: lat, lng: lng });
+            restPlaces.placeId.push(placeId);
         };
         idb.addActPlacesOfAdvices(actPlaces);
         idb.addRestPlacesOfAdvices(restPlaces);
@@ -171,12 +193,14 @@ function initChat() {
         .then((data) => {
             // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
             let dailyChart = new DailyChart(ctx2, data, todaySleepMs);
+            console.log("data" + data);
+            console.log(dailyChart.restData[1])
+            // console.log(dailyChart.getChartData());
         })
         .catch((reason) => console.error(reason));
 
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
-            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
