@@ -46,11 +46,11 @@ class TimeManagerDB {
                 this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, defaultSleepMs: 77760000 });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
-                for (let i in testDate) {
-                    const request = emptyDateStore.put(testDate[i]);
-                    request.onsuccess = event => console.log(`testDate[${i}] saved`);
-                    request.onerror = event => console.log(event.target);
-                }
+                // for (let i in testDate) {
+                //     const request = emptyDateStore.put(testDate[i]);
+                //     request.onsuccess = event => console.log(`testDate[${i}] saved`);
+                //     request.onerror = event => console.log(event.target);
+                // }
             };
         });
     }
@@ -137,7 +137,9 @@ class TimeManagerDB {
                 console.log("TimesStore updated.");
                 //その日の休憩時間と睡眠時間を記録する
                 const date = moment(data.endTime).format('YYYY-MM-DD');
-                this.addColumnOfDate(date, data.restTimeMs);
+                this.getDefaultSleepMsOfSettings((sleepTimeMs) => {
+                    this.addColumnOfDate(date, data.restTimeMs, sleepTimeMs);
+                });
             };
             requestUpdate.onerror = event => this.handleError(event.target);
         };
@@ -165,7 +167,7 @@ class TimeManagerDB {
     }
     /**
      * Dateオブジェクトストアのデータを日付から検索する
-     * データが見つからなかった場合デフォルト値1000を返す
+     * データが見つからなかった場合現在設定されている睡眠時間を返し、オブジェクトストアにデータを保存する
      * @param date 取得するデータの日付("YYYY-MM-DD")
      * @returns 休憩時間(ミリ秒)
      */
@@ -177,7 +179,10 @@ class TimeManagerDB {
             request.onsuccess = event => {
                 const data = request.result;
                 if (typeof data == "undefined") {
-                    resolve(1000); //デフォルト値
+                    this.getDefaultSleepMsOfSettings((sleepTime) => {
+                        resolve(sleepTime);
+                        this.addColumnOfDate(date, 1000, sleepTime);
+                    });
                 }
                 else {
                     resolve(data.restTimeMs);
@@ -188,7 +193,7 @@ class TimeManagerDB {
     }
     /**
      * Dateオブジェクトストアから実行した日付の睡眠時間を取得する
-     * データが見つからなかった場合デフォルト値6時間を返す
+     * データが見つからなかった場合デフォルト値6時間を返し、実行した日の睡眠時間を更新する
      * @param callback 取得したsleepTimeMs(睡眠時間)を引数にとるコールバック関数
      */
     getSleepTimeMsOfDate(callback) {
@@ -201,7 +206,10 @@ class TimeManagerDB {
                 callback(data.sleepTimeMs);
             }
             else {
-                callback(77760000); //6時間
+                this.getDefaultSleepMsOfSettings((sleepTimeMs) => {
+                    this.addSleepTimeMsOfDate(sleepTimeMs);
+                    callback(sleepTimeMs);
+                });
             }
         };
         request.onerror = event => this.handleError(event.target);
@@ -223,7 +231,7 @@ class TimeManagerDB {
                 data = { date: moment().format("YYYY-MM-DD"), sleepTimeMs: sleepTimeMs };
             }
             const requestUpdate = objectStore.put(data);
-            requestUpdate.onsuccess = event => console.log("sleeptime updated.");
+            requestUpdate.onsuccess = event => console.log("sleeptimeMs updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);
@@ -232,14 +240,13 @@ class TimeManagerDB {
      * Dateオブジェクトストアにデータを追加する
      * @param date 日付("YYYY-MM-DD")
      * @param restTimeMs 休憩時間(ミリ秒)
-     * @param sleepTimeMs 睡眠時間(ミリ秒) デフォルト値7776000(6時間)
+     * @param sleepTimeMs 睡眠時間(ミリ秒)
      */
-    addColumnOfDate(date, restTimeMs, sleepTimeMs = 77760000) {
+    addColumnOfDate(date, restTimeMs, sleepTimeMs) {
         const objectStore = this.getObjectStore(this.DATES_STORE, "readwrite");
         const index = objectStore.index("date");
         const request = index.get(date);
         request.onsuccess = event => {
-            //todo request.result統一するか
             let data = event.target.result;
             if (data) {
                 data.restTimeMs += restTimeMs;
@@ -267,15 +274,13 @@ class TimeManagerDB {
             const weekData = { dates: [], restTimes: [], sleepTimes: [] };
             const firstDate = moment(today).startOf('week').format('YYYY-MM-DD');
             const lastDate = moment(today).endOf('week').format('YYYY-MM-DD');
-            const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false);
+            const boundKeyRange = IDBKeyRange.bound(firstDate, lastDate, false, false); //境界を含む
             const request = index.openCursor(boundKeyRange);
             request.onsuccess = event => {
                 const cursor = event.target.result;
-                const begin = moment(today).startOf('week');
-                let i = 0;
                 if (cursor) {
                     const record = cursor.value;
-                    if (record) {
+                    if (moment(record.date).isBetween(firstDate, lastDate, null, '[]')) {
                         const oneDay = {
                             date: moment(record.date).locale('ja').format('DD(ddd)'),
                             restTimeMs: record.restTimeMs,
@@ -287,16 +292,28 @@ class TimeManagerDB {
                     }
                     cursor.continue();
                 }
-                else {
-                    for (i = 0; i < 7; i++) {
-                        weekData.dates.push(begin.add(i, "days").locale('ja').format('DD(ddd)'));
-                        weekData.restTimes.push(1000);
-                        weekData.sleepTimes.push(90720000);
-                    }
-                }
             };
             transaction.oncomplete = event => {
-                resolve(weekData);
+                //7日間の分のデータが取得できなかったときにデフォルト値を格納する
+                if (weekData.dates.length < 7) {
+                    const oneday = moment(today).startOf('week');
+                    const fullWeek = { dates: [], restTimes: [], sleepTimes: [] };
+                    this.getDefaultSleepMsOfSettings((defaultSleepMs) => {
+                        for (let i = 0; i < 7; i++) {
+                            //配列に含まれていない日があった時デフォルト値を挿入する
+                            if (weekData.dates[i] != oneday.locale('ja').format('DD(ddd)')) {
+                                fullWeek.dates.push(oneday.locale('ja').format('DD(ddd)'));
+                                fullWeek.restTimes.push(1000);
+                                fullWeek.sleepTimes.push(defaultSleepMs);
+                            }
+                            oneday.add(1, "days"); //破壊的なメソッド
+                        }
+                        resolve(fullWeek);
+                    });
+                }
+                else {
+                    resolve(weekData);
+                }
             };
         });
     }
@@ -326,6 +343,36 @@ class TimeManagerDB {
             data.goal = goal;
             const requestUpdate = objectStore.put(data);
             requestUpdate.onsuccess = event => console.log("goal updated.");
+            requestUpdate.onerror = event => this.handleError(event.target);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+    /**
+     * Settingsオブジェクトストアからデフォルトに設定した睡眠時間を取得する
+     * @param callback 取得した睡眠時間を引数にとるコールバック関数
+     */
+    getDefaultSleepMsOfSettings(callback) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readonly");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            const sleepMs = data.defaultSleepMs;
+            callback(sleepMs);
+        };
+        request.onerror = event => this.handleError(event.target);
+    }
+    /**
+     * 睡眠時間の変更がない場合この値を使い続ける
+     * @param sleepMs 設定した共通の睡眠時間
+     */
+    addDefaultSleepMsForSettings(sleepMs) {
+        const objectStore = this.getObjectStore(this.SETTINGS_STORE, "readwrite");
+        const request = objectStore.get(1);
+        request.onsuccess = event => {
+            const data = request.result;
+            data.defaultSleepMs = sleepMs;
+            const requestUpdate = objectStore.put(data);
+            requestUpdate.onsuccess = event => console.log("defaultSleepMs updated.");
             requestUpdate.onerror = event => this.handleError(event.target);
         };
         request.onerror = event => this.handleError(event.target);

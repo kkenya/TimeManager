@@ -20,6 +20,10 @@ idb.open()
             if (!status) status = "active";
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
+        idb.getSleepTimeMsOfDate((sleepTimeMs) => {
+            console.log(sleepTimeMs);
+        });
+        //todo 休憩と活動の比率
         const ration = { active: 40, rest: 60 };
         if (ration.active > ration.rest) {
             idb.getActPlacesOfAdvices((places) => {
@@ -159,8 +163,7 @@ setSleepTime.addEventListener("click", () => {
     }
     sleepTime += parseInt(hourRange.value) * 60 * 60 * 1000;
     idb.addSleepTimeMsOfDate(sleepTime);
-    // todo 睡眠時間の初期値を設定する
-    // todo ページ先頭に遷移する
+    idb.addDefaultSleepMsForSettings(sleepTime);
 }, true);
 
 // 睡眠時間(時間)の目盛りを設定する
@@ -182,10 +185,10 @@ for (let i = 0; i < 7; i++) {
 function initChat() {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
-    const today = moment().add(8, "weeks").format('YYYY-MM-DD');
+    const today = moment().format('YYYY-MM-DD');
     let todaySleepMs = 0;
 
-    idb.getSleepTimeMsOfDate((sleepTimeMs) => {
+    idb.getDefaultSleepMsOfSettings((sleepTimeMs) => {
         todaySleepMs = sleepTimeMs;
     });
 
