@@ -85,10 +85,9 @@ class TimeManagerGeolocation {
             title: name
         });
         const infowindow = new google.maps.InfoWindow({
-            content: "現在地を取得しました",
+            content: "現在地を取得しました"
         });
         infowindow.open(this.map, marker);
-
         setTimeout((() => {
             const closeInfo = new google.maps.InfoWindow({
                 content: "</br></br><h1>ウインドウを閉じます</h1></br></br>",
@@ -97,6 +96,7 @@ class TimeManagerGeolocation {
             closeInfo.open(this.map, marker);
         }), 2000);
     }
+    ;
     handleLocationError(browserHasGeolocation) {
         window.alert(browserHasGeolocation ? 'エラー: 現在地の取得に失敗しました.' : 'エラー: ブラウザが現在地の取得に対応していません.');
     }

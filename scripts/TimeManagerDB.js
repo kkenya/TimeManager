@@ -43,7 +43,7 @@ class TimeManagerDB {
                 const emptySettingsStore = transaction.objectStore(this.SETTINGS_STORE);
                 const emptyStatusStore = transaction.objectStore(this.STATUS_STORE);
                 const emptyDateStore = transaction.objectStore(this.DATES_STORE);
-                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 } });
+                this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, defaultSleepMs: 77760000 });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
                 //todo test
                 for (let i in testDate) {
@@ -165,6 +165,7 @@ class TimeManagerDB {
     }
     /**
      * Dateオブジェクトストアのデータを日付から検索する
+     * データが見つからなかった場合デフォルト値1000を返す
      * @param date 取得するデータの日付("YYYY-MM-DD")
      * @returns 休憩時間(ミリ秒)
      */
@@ -176,7 +177,7 @@ class TimeManagerDB {
             request.onsuccess = event => {
                 const data = request.result;
                 if (typeof data == "undefined") {
-                    reject("data not faund");
+                    resolve(1000); //デフォルト値
                 }
                 else {
                     resolve(data.restTimeMs);
@@ -187,6 +188,7 @@ class TimeManagerDB {
     }
     /**
      * Dateオブジェクトストアから実行した日付の睡眠時間を取得する
+     * データが見つからなかった場合デフォルト値6時間を返す
      * @param callback 取得したsleepTimeMs(睡眠時間)を引数にとるコールバック関数
      */
     getSleepTimeMsOfDate(callback) {
@@ -195,14 +197,12 @@ class TimeManagerDB {
         const request = index.get(moment().format('YYYY-MM-DD'));
         request.onsuccess = event => {
             const data = request.result;
-            let sleepTimeMs = 77760000; //データが見つからなかった場合の睡眠時間を6時間にする
             if (data) {
-                sleepTimeMs = data.sleepTimeMs;
+                callback(data.sleepTimeMs);
             }
             else {
-                this.addSleepTimeMsOfDate(sleepTimeMs);
+                callback(77760000); //6時間
             }
-            callback(sleepTimeMs);
         };
         request.onerror = event => this.handleError(event.target);
     }
@@ -255,7 +255,7 @@ class TimeManagerDB {
         request.onerror = event => this.handleError(event.target);
     }
     /**
-     * 1週間の休憩時間を取得する。記録が存在する日のデータのみを返す
+     * 1週間の休憩時間を取得する。記録が存在しない場合デフォルト値を返す
      * @param today 取得したい週に含まれる日付("YYYY-MM-DD")
      * @returns 1週間のデータ weekData: { dates: ["MM/DD(dddd)", ...], restTimes: [number(ms), ...], sleepTimes: [number(ms), ...]}
      */
@@ -271,17 +271,28 @@ class TimeManagerDB {
             const request = index.openCursor(boundKeyRange);
             request.onsuccess = event => {
                 const cursor = event.target.result;
+                const begin = moment(today).startOf('week');
+                let i = 0;
                 if (cursor) {
                     const record = cursor.value;
-                    const oneDay = {
-                        date: moment(record.date).locale('ja').format('DD(ddd)'),
-                        restTimeMs: record.restTimeMs,
-                        sleepTimeMs: record.sleepTimeMs
-                    };
-                    weekData.dates.push(oneDay.date);
-                    weekData.restTimes.push(oneDay.restTimeMs);
-                    weekData.sleepTimes.push(oneDay.sleepTimeMs);
+                    if (record) {
+                        const oneDay = {
+                            date: moment(record.date).locale('ja').format('DD(ddd)'),
+                            restTimeMs: record.restTimeMs,
+                            sleepTimeMs: record.sleepTimeMs
+                        };
+                        weekData.dates.push(oneDay.date);
+                        weekData.restTimes.push(oneDay.restTimeMs);
+                        weekData.sleepTimes.push(oneDay.sleepTimeMs);
+                    }
                     cursor.continue();
+                }
+                else {
+                    for (i = 0; i < 7; i++) {
+                        weekData.dates.push(begin.add(i, "days").locale('ja').format('DD(ddd)'));
+                        weekData.restTimes.push(1000);
+                        weekData.sleepTimes.push(90720000);
+                    }
                 }
             };
             transaction.oncomplete = event => {

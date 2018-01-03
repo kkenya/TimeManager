@@ -18,7 +18,8 @@ var Date = {
 
 var Settings = {
     goal: "string",
-    latLng: {lat: "number", lng: "number"}
+    latLng: {lat: "number", lng: "number"},
+    defaultSleepMs: "number" //ms
 };
 
 var Advices = {

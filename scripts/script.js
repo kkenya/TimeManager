@@ -20,7 +20,7 @@ idb.open()
             if (!status) status = "active";
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
-        const ration = { active: 60, rest: 40 };
+        const ration = { active: 40, rest: 60 };
         if (ration.active > ration.rest) {
             idb.getActPlacesOfAdvices((places) => {
                 console.log(places);
@@ -182,7 +182,7 @@ for (let i = 0; i < 7; i++) {
 function initChat() {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
-    const today = moment().format('YYYY-MM-DD');
+    const today = moment().add(8, "weeks").format('YYYY-MM-DD');
     let todaySleepMs = 0;
 
     idb.getSleepTimeMsOfDate((sleepTimeMs) => {
@@ -190,10 +190,9 @@ function initChat() {
     });
 
     idb.getRestTimeMsOfDate(today)
-        .then((data) => {
+        .then((restTimeMs) => {
             // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
-            let dailyChart = new DailyChart(ctx2, data, todaySleepMs);
-            console.log("data" + data);
+            let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
             console.log(dailyChart.restData[1])
             // console.log(dailyChart.getChartData());
         })
@@ -201,6 +200,7 @@ function initChat() {
 
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
+            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
