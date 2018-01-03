@@ -10,10 +10,10 @@ const ACTIVE_STR = "ACT";
 const REST_STR = "REST";
 let status;
 idb.open()
-.then(() => {
-    // todo do promise
-    idb.getGoalOfSettings((goal) => {
-        targetElement.innerHTML = goal;
+    .then(() => {
+        // todo do promise
+        idb.getGoalOfSettings((goal) => {
+            targetElement.innerHTML = goal;
         });
         idb.getStateOfStatus((state) => {
             status = state;
@@ -23,34 +23,11 @@ idb.open()
         idb.getSleepTimeMsOfDate((sleepTimeMs) => {
             console.log(sleepTimeMs);
         });
-        //todo 休憩と活動の比率
-        const ration = { active: 40, rest: 60 };
-        if (ration.active > ration.rest) {
-            idb.getActPlacesOfAdvices((places) => {
-                console.log(places);
-                adviceElement.innerHTML = "気分転換しませんか？";
-                const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
-                const destPlace = {
-                    latLng: places.latLng[randomNum],
-                    name: places.name[randomNum],
-                    placeId: places.placeId[randomNum]
-                };
-                initModalWindow(destPlace);
-            });
-        } else {
-            idb.getRestPlacesOfAdvices((places) => {
-                console.log(places);
-                adviceElement.innerHTML = "休憩しませんか？";
-                const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
-                const destPlace = {
-                    latLng: places.latLng[randomNum],
-                    name: places.name[randomNum],
-                    placeId: places.placeId[randomNum]
-                };
-                initModalWindow(destPlace);
-            });
-        }
-        initChat();
+
+        setChat((ration) => {
+            setAdvice(ration);
+        });
+
     })
     .catch(error => console.error(error));
 
@@ -182,7 +159,7 @@ for (let i = 0; i < 7; i++) {
         `<option>${i * 10}</option>`);
 }
 
-function initChat() {
+function setChat(callback) {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
     const today = moment().format('YYYY-MM-DD');
@@ -192,15 +169,6 @@ function initChat() {
         todaySleepMs = sleepTimeMs;
     });
 
-    idb.getRestTimeMsOfDate(today)
-        .then((restTimeMs) => {
-            // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
-            let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
-            console.log(dailyChart.restData[1])
-            // console.log(dailyChart.getChartData());
-        })
-        .catch((reason) => console.error(reason));
-
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
             console.log(weekData);
@@ -208,4 +176,45 @@ function initChat() {
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
         .catch((reason) => console.error(reason));
+
+    idb.getRestTimeMsOfDate(today)
+        .then((restTimeMs) => {
+            console.log(restTimeMs);
+            // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
+            let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
+            //休憩時間と睡眠時間の比率を計算する
+            const remainingTime = 86400000 - todaySleepMs;
+            const active = restTimeMs / remainingTime * 100;
+            const rest = 100 - active;
+            callback({ active: active, rest: rest });
+        })
+        .catch((reason) => console.error(reason));
+}
+
+function setAdvice(ration) {
+    if (ration.active > ration.rest) {
+        idb.getActPlacesOfAdvices((places) => {
+            console.log(places);
+            adviceElement.innerHTML = "気分転換しませんか？";
+            const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
+            const destPlace = {
+                latLng: places.latLng[randomNum],
+                name: places.name[randomNum],
+                placeId: places.placeId[randomNum]
+            };
+            initModalWindow(destPlace);
+        });
+    } else {
+        idb.getRestPlacesOfAdvices((places) => {
+            console.log(places);
+            adviceElement.innerHTML = "休憩しませんか？";
+            const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
+            const destPlace = {
+                latLng: places.latLng[randomNum],
+                name: places.name[randomNum],
+                placeId: places.placeId[randomNum]
+            };
+            initModalWindow(destPlace);
+        });
+    }
 }

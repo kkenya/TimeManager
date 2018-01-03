@@ -45,12 +45,7 @@ class TimeManagerDB {
                 const emptyDateStore = transaction.objectStore(this.DATES_STORE);
                 this.initObjectStore(emptySettingsStore, { id: 1, goal: "目標を設定しよう", latLng: { lat: 36.5310338, lng: 136.6284361 }, defaultSleepMs: 77760000 });
                 this.initObjectStore(emptyStatusStore, { id: 1, state: "active" });
-                //todo test
-                // for (let i in testDate) {
-                //     const request = emptyDateStore.put(testDate[i]);
-                //     request.onsuccess = event => console.log(`testDate[${i}] saved`);
-                //     request.onerror = event => console.log(event.target);
-                // }
+                this.initObjectStore(emptyDateStore, { date: moment().format("YYYY-MM-DD"), restTimeMs: 1000, sleepTimeMs: 77760000 });
             };
         });
     }
@@ -167,7 +162,7 @@ class TimeManagerDB {
     }
     /**
      * Dateオブジェクトストアのデータを日付から検索する
-     * データが見つからなかった場合現在設定されている睡眠時間を返し、オブジェクトストアにデータを保存する
+     * データが見つからなかった場合デフォルト値を返し、オブジェクトストアにデータを保存する
      * @param date 取得するデータの日付("YYYY-MM-DD")
      * @returns 休憩時間(ミリ秒)
      */
@@ -178,14 +173,11 @@ class TimeManagerDB {
             const request = index.get(date);
             request.onsuccess = event => {
                 const data = request.result;
-                if (typeof data == "undefined") {
-                    this.getDefaultSleepMsOfSettings((sleepTime) => {
-                        resolve(sleepTime);
-                        this.addColumnOfDate(date, 1000, sleepTime);
-                    });
+                if (data.restTimeMs) {
+                    resolve(data.restTimeMs);
                 }
                 else {
-                    resolve(data.restTimeMs);
+                    resolve(1000);
                 }
             };
             request.onerror = event => this.handleError(event.target);
@@ -207,7 +199,7 @@ class TimeManagerDB {
             }
             else {
                 this.getDefaultSleepMsOfSettings((sleepTimeMs) => {
-                    this.addSleepTimeMsOfDate(sleepTimeMs);
+                    this.addColumnOfDate(moment().format('YYYY-MM-DD'), 1000, sleepTimeMs);
                     callback(sleepTimeMs);
                 });
             }

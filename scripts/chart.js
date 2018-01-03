@@ -188,6 +188,19 @@ class DailyChart {
         this.restData[0] = restData / this.remainingTime * 100;
         this.restData[1] = 100 - this.restData[0];
     }
+    // データの取得
+    getChartData() {
+        if (this.restData) {
+            return {
+                active: this.restData[1],
+                rest: this.restData[0]
+            }
+        }
+        
+        else {
+            console.log("休憩時間と活動時間が設定されていません");
+        }
+    }
     // データの設定
     setChartData(restData) {
         return {
