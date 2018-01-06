@@ -24,7 +24,7 @@ idb.open()
             console.log(sleepTimeMs);
         });
 
-        setChat((ration) => {
+        setChart((ration) => {
             setAdvice(ration);
         });
 
@@ -41,11 +41,14 @@ stateBtn.addEventListener("click", () => {
         idb.addStateOfStatus(status);
 
         idb.addStartTimeOfTimes(now);
-
+        // 背景画像の変更
+        stateBtn.style.backgroundImage = "url(images/sports_boxing_man.png)";
     } else if (status == "rest") {
         status = "active";
         stateText.textContent = ACTIVE_STR;
         idb.addStateOfStatus(status);
+        // 背景画像の変更
+        stateBtn.style.backgroundImage = "url(images/sports_boxing_corner_man.png)";
 
         //todo わかりにくいので2つの処理をDB内で完結させる
         idb.getLastIdOfTimes()
@@ -159,7 +162,7 @@ for (let i = 0; i < 7; i++) {
         `<option>${i * 10}</option>`);
 }
 
-function setChat(callback) {
+function setChart(callback) {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
     const today = moment().format('YYYY-MM-DD');
@@ -179,7 +182,6 @@ function setChat(callback) {
 
     idb.getRestTimeMsOfDate(today)
         .then((restTimeMs) => {
-            console.log(restTimeMs);
             // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
             let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
             //休憩時間と睡眠時間の比率を計算する
@@ -192,7 +194,7 @@ function setChat(callback) {
 }
 
 function setAdvice(ration) {
-    if (ration.active > ration.rest) {
+    if (ration.active  > ration.rest) {
         idb.getActPlacesOfAdvices((places) => {
             console.log(places);
             adviceElement.innerHTML = "気分転換しませんか？";

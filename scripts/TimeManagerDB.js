@@ -11,7 +11,7 @@ class TimeManagerDB {
         this.SETTINGS_STORE = "Settings";
         this.ADVICES_STORE = "Advices";
         if (!window.indexedDB) {
-            window.alert("このブラウザは安定板の IndexedDB をサポートしていません。IndexedDB の機能は利用できません。");
+            window.alert("このブラウザは安定版の IndexedDB をサポートしていません。IndexedDB の機能は利用できません。");
         }
     }
     /**
