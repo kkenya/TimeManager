@@ -35,7 +35,7 @@ function initModalWindow(destPlace) {
 }
 
 function initGeoModalWindow() {
-    const modalOpen = document.getElementById("openModalWindow2");
+    const modalOpen = document.getElementById("location_update");
 
     // モーダルウィンドウの背景
     const overlayElement = document.createElement("div");

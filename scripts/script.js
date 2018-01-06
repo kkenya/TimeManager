@@ -27,7 +27,7 @@ idb.open()
         setChart((ration) => {
             setAdvice(ration);
         });
-
+        initGeoModalWindow();
     })
     .catch(error => console.error(error));
 
@@ -58,7 +58,6 @@ stateBtn.addEventListener("click", () => {
 });
 
 locationBtn.addEventListener("click", () => {
-    //todo CROSにより現状不可能 window.open(gmaps.html)
     window.setTimeout(() => {
         //localStrageからactの割合が多いときに表示する場所を取得する
         const actPlaces = { name: [], latLng: [], placeId: [] };
