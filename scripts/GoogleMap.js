@@ -5,3 +5,4 @@ geo.getPosition()
         geo.initMap(mapDiv);
     })
     .catch((reason) => console.error(reason));
+    

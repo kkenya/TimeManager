@@ -27,10 +27,6 @@ class TimeManagerGeolocation {
         this.service = new google.maps.places.PlacesService(this.map);
         this.requestActPlaces(this.currentPosition);
         this.requestRestPlaces(this.currentPosition);
-        //ウインドウを閉じる
-        setTimeout(() => {
-            window.open('about:blank', '_self').close();
-        }, 4000);
     }
     requestActPlaces(position) {
         const request = {
@@ -88,13 +84,6 @@ class TimeManagerGeolocation {
             content: "現在地を取得しました"
         });
         infowindow.open(this.map, marker);
-        setTimeout((() => {
-            const closeInfo = new google.maps.InfoWindow({
-                content: "</br></br><h1>ウインドウを閉じます</h1></br></br>",
-            });
-            infowindow.close();
-            closeInfo.open(this.map, marker);
-        }), 2000);
     }
     ;
     handleLocationError(browserHasGeolocation) {

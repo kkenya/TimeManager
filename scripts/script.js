@@ -6,12 +6,11 @@ const stateText = document.getElementById("btn_text");
 const goalText = document.getElementById("todo_text");
 const goalBtn = document.getElementById("set_todo");
 const locationBtn = document.getElementById("location_update");
-const ACTIVE_STR = "ACT";
-const REST_STR = "REST";
+const ACTIVE_STR = "　　　";
+const REST_STR = "　　　";
 let status;
 idb.open()
     .then(() => {
-        // todo do promise
         idb.getGoalOfSettings((goal) => {
             targetElement.innerHTML = goal;
         });
@@ -21,13 +20,13 @@ idb.open()
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
         idb.getSleepTimeMsOfDate((sleepTimeMs) => {
-            console.log(sleepTimeMs);
+            //todo 睡眠時間の表示
         });
 
         setChat((ration) => {
             setAdvice(ration);
         });
-
+        setUpdateGeolocation();
     })
     .catch(error => console.error(error));
 
@@ -41,13 +40,19 @@ stateBtn.addEventListener("click", () => {
         idb.addStateOfStatus(status);
 
         idb.addStartTimeOfTimes(now);
-
+        // 背景画像の変更
+        stateBtn.style.backgroundImage = "url(images/act.jpg)";
+        stateBtn.style.color = "#78a6e4";
     } else if (status == "rest") {
         status = "active";
         stateText.textContent = ACTIVE_STR;
         idb.addStateOfStatus(status);
 
-        //todo わかりにくいので2つの処理をDB内で完結させる
+        stateBtn.style.color = "#ff6384";
+        // 背景画像の変更
+        stateBtn.style.backgroundImage = "url(images/rest.jpg)";
+
+        // 休憩の終了時間を追加する
         idb.getLastIdOfTimes()
             .then((id) => idb.editColumnOfTimes(id, now))
             .catch((reason) => console.error(reason));
@@ -55,7 +60,6 @@ stateBtn.addEventListener("click", () => {
 });
 
 locationBtn.addEventListener("click", () => {
-    //todo CROSにより現状不可能 window.open(gmaps.html)
     window.setTimeout(() => {
         //localStrageからactの割合が多いときに表示する場所を取得する
         const actPlaces = { name: [], latLng: [], placeId: [] };
@@ -171,7 +175,6 @@ function setChat(callback) {
 
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
-            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
@@ -179,7 +182,6 @@ function setChat(callback) {
 
     idb.getRestTimeMsOfDate(today)
         .then((restTimeMs) => {
-            console.log(restTimeMs);
             // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
             let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
             //休憩時間と睡眠時間の比率を計算する
@@ -194,7 +196,6 @@ function setChat(callback) {
 function setAdvice(ration) {
     if (ration.active > ration.rest) {
         idb.getActPlacesOfAdvices((places) => {
-            console.log(places);
             adviceElement.innerHTML = "気分転換しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {
@@ -206,7 +207,6 @@ function setAdvice(ration) {
         });
     } else {
         idb.getRestPlacesOfAdvices((places) => {
-            console.log(places);
             adviceElement.innerHTML = "休憩しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {
