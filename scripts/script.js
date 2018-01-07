@@ -6,12 +6,11 @@ const stateText = document.getElementById("btn_text");
 const goalText = document.getElementById("todo_text");
 const goalBtn = document.getElementById("set_todo");
 const locationBtn = document.getElementById("location_update");
-const ACTIVE_STR = "ACT";
-const REST_STR = "REST";
+const ACTIVE_STR = "　　　";
+const REST_STR = "　　　";
 let status;
 idb.open()
     .then(() => {
-        // todo do promise
         idb.getGoalOfSettings((goal) => {
             targetElement.innerHTML = goal;
         });
@@ -21,13 +20,13 @@ idb.open()
             status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
         });
         idb.getSleepTimeMsOfDate((sleepTimeMs) => {
-            console.log(sleepTimeMs);
+            //todo 睡眠時間の表示
         });
 
-        setChart((ration) => {
+        setChat((ration) => {
             setAdvice(ration);
         });
-        initGeoModalWindow();
+        setUpdateGeolocation();
     })
     .catch(error => console.error(error));
 
@@ -42,15 +41,18 @@ stateBtn.addEventListener("click", () => {
 
         idb.addStartTimeOfTimes(now);
         // 背景画像の変更
-        stateBtn.style.backgroundImage = "url(images/sports_boxing_man.png)";
+        stateBtn.style.backgroundImage = "url(images/act.jpg)";
+        stateBtn.style.color = "#78a6e4";
     } else if (status == "rest") {
         status = "active";
         stateText.textContent = ACTIVE_STR;
         idb.addStateOfStatus(status);
-        // 背景画像の変更
-        stateBtn.style.backgroundImage = "url(images/sports_boxing_corner_man.png)";
 
-        //todo わかりにくいので2つの処理をDB内で完結させる
+        stateBtn.style.color = "#ff6384";
+        // 背景画像の変更
+        stateBtn.style.backgroundImage = "url(images/rest.jpg)";
+
+        // 休憩の終了時間を追加する
         idb.getLastIdOfTimes()
             .then((id) => idb.editColumnOfTimes(id, now))
             .catch((reason) => console.error(reason));
@@ -161,7 +163,7 @@ for (let i = 0; i < 7; i++) {
         `<option>${i * 10}</option>`);
 }
 
-function setChart(callback) {
+function setChat(callback) {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
     const today = moment().format('YYYY-MM-DD');
@@ -173,7 +175,6 @@ function setChart(callback) {
 
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
-            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
@@ -193,9 +194,8 @@ function setChart(callback) {
 }
 
 function setAdvice(ration) {
-    if (ration.active  > ration.rest) {
+    if (ration.active > ration.rest) {
         idb.getActPlacesOfAdvices((places) => {
-            console.log(places);
             adviceElement.innerHTML = "気分転換しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {
@@ -207,7 +207,6 @@ function setAdvice(ration) {
         });
     } else {
         idb.getRestPlacesOfAdvices((places) => {
-            console.log(places);
             adviceElement.innerHTML = "休憩しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {

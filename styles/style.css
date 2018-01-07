@@ -15,7 +15,6 @@ body {
 hr {
     border: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.26);
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.26); */
 }
 
 section h1 {
@@ -111,7 +110,7 @@ canvas {
 
 #state_btn {
     background-color: #FFF;
-    background-image: url("../images/sports_boxing_corner_man.png");
+    background-image: url("../images/rest.jpg");
     background-size: contain;
     background-repeat: no-repeat;
     background-position: 50% 50%;
@@ -130,7 +129,7 @@ canvas {
     color: #A1A1A1;
     text-shadow: 0 2px 5px rgba(0, 0, 0, 0.26);
     position: fixed;
-    bottom: 0;
+    bottom: 3%;
     left: 50%;
     transform: translateX(-50%);
     -webkit-transform: translateX(-50%);
@@ -243,6 +242,7 @@ input[type="range"]::-webkit-slider-thumb {
     background-color: rgba( 0, 0, 0, 0.75);
     z-index: 10;
 }
+
 
 #modal-contents2 {
     padding: 5px;

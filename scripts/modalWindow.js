@@ -34,7 +34,7 @@ function initModalWindow(destPlace) {
     });
 }
 
-function initGeoModalWindow() {
+function setUpdateGeolocation() {
     const modalOpen = document.getElementById("location_update");
 
     // モーダルウィンドウの背景
@@ -47,7 +47,7 @@ function initGeoModalWindow() {
     modalWindow.setAttribute("class", "fadeIn");
     modalWindow.setAttribute("id", "modal-contents2");
 
-    const uri = `https://frontier10.kanazawa-it.ac.jp/~a1519640/TimeManager/gmaps.html`
+    const uri = `https://frontier10.kanazawa-it.ac.jp/~a1519640/TimeManager/GoogleMap.html`
     const iframe = document.createElement("iframe");
     iframe.width = "100%";
     iframe.height = "100%";
