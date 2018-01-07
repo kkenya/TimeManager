@@ -47,7 +47,7 @@ function setUpdateGeolocation() {
     modalWindow.setAttribute("class", "fadeIn");
     modalWindow.setAttribute("id", "modal-contents2");
 
-    const uri = `https://kkenya.github.io/TimeManager/GoogleMap.html`
+    const uri = `https://frontier10.kanazawa-it.ac.jp/~a1519640/TimeManager/GoogleMap.html`
     const iframe = document.createElement("iframe");
     iframe.width = "100%";
     iframe.height = "100%";
