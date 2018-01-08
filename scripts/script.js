@@ -6,21 +6,30 @@ const stateText = document.getElementById("btn_text");
 const goalText = document.getElementById("todo_text");
 const goalBtn = document.getElementById("set_todo");
 const locationBtn = document.getElementById("location_update");
+const stateLabel = document.getElementById("state_label");
 const ACTIVE_STR = "　　　";
 const REST_STR = "　　　";
 let status;
 idb.open()
     .then(() => {
+        // todo do promise
         idb.getGoalOfSettings((goal) => {
             targetElement.innerHTML = goal;
         });
         idb.getStateOfStatus((state) => {
             status = state;
             if (!status) status = "active";
-            status == "active" ? stateText.textContent = ACTIVE_STR : stateText.textContent = REST_STR;
-        });
-        idb.getSleepTimeMsOfDate((sleepTimeMs) => {
-            //todo 睡眠時間の表示
+            if (status == "active") {
+                stateBtn.style.backgroundImage = "url(images/rest.jpg)";
+                stateLabel.style.color = "#ff6384"
+                stateLabel.innerHTML = "活動中";
+                stateText.textContent = ACTIVE_STR;
+            } else if (status == "rest") {
+                stateBtn.style.backgroundImage = "url(images/act.jpg)";
+                stateLabel.style.color = "#78a6e4";
+                stateLabel.innerHTML = "休憩中";
+                stateText.textContent = ACTIVE_STR;
+            }
         });
 
         setChat((ration) => {
@@ -42,17 +51,21 @@ stateBtn.addEventListener("click", () => {
         idb.addStartTimeOfTimes(now);
         // 背景画像の変更
         stateBtn.style.backgroundImage = "url(images/act.jpg)";
-        stateBtn.style.color = "#78a6e4";
+
+        stateLabel.style.color = "#78a6e4";
+        stateLabel.innerHTML = "休憩中";
     } else if (status == "rest") {
         status = "active";
         stateText.textContent = ACTIVE_STR;
         idb.addStateOfStatus(status);
 
-        stateBtn.style.color = "#ff6384";
         // 背景画像の変更
         stateBtn.style.backgroundImage = "url(images/rest.jpg)";
 
-        // 休憩の終了時間を追加する
+        stateLabel.style.color = "#ff6384"
+        stateLabel.innerHTML = "活動中";
+
+        //todo わかりにくいので2つの処理をDB内で完結させる
         idb.getLastIdOfTimes()
             .then((id) => idb.editColumnOfTimes(id, now))
             .catch((reason) => console.error(reason));
@@ -60,9 +73,14 @@ stateBtn.addEventListener("click", () => {
 });
 
 locationBtn.addEventListener("click", () => {
+    //todo CROSにより現状不可能 window.open(gmaps.html)
     window.setTimeout(() => {
         //localStrageからactの割合が多いときに表示する場所を取得する
-        const actPlaces = { name: [], latLng: [], placeId: [] };
+        const actPlaces = {
+            name: [],
+            latLng: [],
+            placeId: []
+        };
         const actLength = localStorage.getItem("actLength");
         for (i = 0; i < parseInt(actLength); i++) {
             const nameStr = `actName${i}`;
@@ -74,11 +92,18 @@ locationBtn.addEventListener("click", () => {
             const lng = parseFloat(localStorage.getItem(lngStr));
             const placeId = localStorage.getItem(placeIdStr);
             actPlaces.name.push(name);
-            actPlaces.latLng.push({ lat: lat, lng: lng });
+            actPlaces.latLng.push({
+                lat: lat,
+                lng: lng
+            });
             actPlaces.placeId.push(placeId);
         };
         //localStrageからrestの割合が多いときに表示する場所を取得する
-        const restPlaces = { name: [], latLng: [], placeId: [] };
+        const restPlaces = {
+            name: [],
+            latLng: [],
+            placeId: []
+        };
         const restLength = localStorage.getItem("restLength");
         for (i = 0; i < parseInt(actLength); i++) {
             const nameStr = `restName${i}`;
@@ -90,7 +115,10 @@ locationBtn.addEventListener("click", () => {
             const lng = parseFloat(localStorage.getItem(lngStr));
             const placeId = localStorage.getItem(placeIdStr);
             restPlaces.name.push(name);
-            restPlaces.latLng.push({ lat: lat, lng: lng });
+            restPlaces.latLng.push({
+                lat: lat,
+                lng: lng
+            });
             restPlaces.placeId.push(placeId);
         };
         idb.addActPlacesOfAdvices(actPlaces);
@@ -117,7 +145,7 @@ const setSleepTime = document.getElementById("submit_sleep_time");
 const hourLabel = document.getElementById("sleep_hour_label");
 const minLabel = document.getElementById("sleep_min_label");
 
-let sleepTime = 0;   // 睡眠時間
+let sleepTime = 0; // 睡眠時間
 
 hourRange.addEventListener("change", function (e) {
     //分・秒を2桁にそろえる
@@ -137,7 +165,10 @@ minRange.addEventListener("change", function (e) {
 
 setSleepTime.addEventListener("click", () => {
     sleepTime = 0;
+    const sleepTimeLabel = document.getElementById("sleep_time_label");
+    sleepTimeLabel.innerHTML = `${hourRange.value}:${("0" + minRange.value).slice(-2)}`;
     if (minRange.value == "60") {
+        sleepTimeLabel.innerHTML = `${hourRange.value}:${minRange.value}`;
         sleepTime += 59 * 60 * 1000;
     } else {
         sleepTime += parseInt(minRange.value) * 60 * 1000;
@@ -167,14 +198,23 @@ function setChat(callback) {
     const ctx1 = document.getElementById("weekly_data_canvas").getContext("2d");
     const ctx2 = document.getElementById("daily_data_canvas").getContext("2d");
     const today = moment().format('YYYY-MM-DD');
+    const sleepTimeLabel = document.getElementById("sleep_time_label");
     let todaySleepMs = 0;
 
     idb.getDefaultSleepMsOfSettings((sleepTimeMs) => {
         todaySleepMs = sleepTimeMs;
+
+        let hour = "0" + (sleepTimeMs / (60 * 60 * 1000));
+        let min = parseFloat("0" + hour.slice(2)) * 60;
+        hour = hour.slice(0, 2);
+        min = ("0" + Math.round(min)).slice(-2);
+
+        sleepTimeLabel.innerHTML = `${hour}:${min}`;
     });
 
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
+            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
@@ -182,13 +222,17 @@ function setChat(callback) {
 
     idb.getRestTimeMsOfDate(today)
         .then((restTimeMs) => {
+            console.log(restTimeMs);
             // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
             let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
             //休憩時間と睡眠時間の比率を計算する
             const remainingTime = 86400000 - todaySleepMs;
             const active = restTimeMs / remainingTime * 100;
             const rest = 100 - active;
-            callback({ active: active, rest: rest });
+            callback({
+                active: active,
+                rest: rest
+            });
         })
         .catch((reason) => console.error(reason));
 }
@@ -196,6 +240,7 @@ function setChat(callback) {
 function setAdvice(ration) {
     if (ration.active > ration.rest) {
         idb.getActPlacesOfAdvices((places) => {
+            console.log(places);
             adviceElement.innerHTML = "気分転換しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {
@@ -207,6 +252,7 @@ function setAdvice(ration) {
         });
     } else {
         idb.getRestPlacesOfAdvices((places) => {
+            console.log(places);
             adviceElement.innerHTML = "休憩しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {

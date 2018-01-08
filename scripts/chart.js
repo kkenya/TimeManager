@@ -1,8 +1,8 @@
 /* グラフのクラス(７日分) */
 class WeeklyChart {
     constructor(ctx, data, labels, sleepingTime) {
-        this.activeData = new Array(7);     // 活動時間
-        this.restData = new Array(7);       // 休憩時間
+        this.activeData = new Array(7); // 活動時間
+        this.restData = new Array(7); // 休憩時間
         // ２４時間から睡眠時間を引いた時間
         // 86400000 = 24h * 60min * 60sec * 1000millsec
         this.remainingTime = [86400000, 86400000, 86400000, 86400000, 86400000, 86400000, 86400000];
@@ -71,7 +71,7 @@ class WeeklyChart {
         });
         chartPrimise.then(() => {
             this.setRemainingTime(this.remainingTime, sleepingTime);
-            this.chartLabels = labels;  // x軸のラベル
+            this.chartLabels = labels; // x軸のラベル
 
             this.calculateTimesRate(data);
             this.data = this.setChartData(this.activeData, this.restData);
@@ -102,20 +102,18 @@ class WeeklyChart {
         return {
             labels: this.chartLabels,
             datasets: [{
-                label: '活動時間',
-                data: activeData,
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 1
-            },
-            {
                 label: '休憩時間',
                 data: restData,
                 backgroundColor: 'rgb(54, 162, 235)',
                 borderColor: 'rgb(54, 162, 235)',
                 borderWidth: 1
-            }
-            ]
+            }, {
+                label: '活動時間',
+                data: activeData,
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 1
+            }]
         };
     }
 }
@@ -195,19 +193,17 @@ class DailyChart {
                 active: this.restData[1],
                 rest: this.restData[0]
             }
-        }
-
-        else {
+        } else {
             console.log("休憩時間と活動時間が設定されていません");
         }
     }
     // データの設定
     setChartData(restData) {
         return {
-            labels: ["活動時間", "休憩時間"],
+            labels: ["休憩時間", "活動時間"],
             datasets: [{
                 data: restData,
-                backgroundColor: ['rgb(54, 162, 235)', 'rgb(255, 99, 132)']
+                backgroundColor: ['rgb(54, 162, 235)', 'rgb(255, 99, 132)', ]
             }]
         };
     }

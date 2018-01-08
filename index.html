@@ -5,6 +5,7 @@
     <title>Time Manager</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="images/favicon.ico" >
     <!-- css -->
     <link rel="stylesheet" href="styles/reset.css">
     <link rel="stylesheet" href="styles/style.css">
@@ -32,7 +33,7 @@
                 <input type="radio" name="nav" class="nav" id="radio_02" value="graph">
                 <label for="radio_02">data</label>
                 <input type="radio" name="nav" class="nav" id="radio_03" value="setting">
-                <label for="radio_03">setting</label>
+                <label for="radio_03">set</label>
             </form>
         </nav>
         <div id="top" class="page">
@@ -41,17 +42,23 @@
                     <h1 id="to_setting">目標</h1>
                     <span id="target">目標を設定しよう</span>
                     <hr>
-                        <p id="advice"></p>
-                        <input type="button" id="openModalWindow" value="位置情報を記録しよう">
+                    <p id="advice"></p>
+                    <input type="button" id="openModalWindow" value="位置情報を記録しよう">
+                </div>
+                <div class="card" id="state_label_box">
+                    <span id="state_label"></span>
                 </div>
                 <div id="state_btn" class="card">
-                    <span id="btn_text">REST</span>
+                    <span id="btn_text"></span>
                 </div>
             </section>
         </div>
         <!-- graph_area -->
         <div id="graph" class="page">
             <section>
+                <div class="card">
+                    <p>睡眠時間　<span id="sleep_time_label"></span></p>
+                </div>
                 <div class="card">
                     <h1>今週の記録</h1>
                     <canvas id="weekly_data_canvas"></canvas>
