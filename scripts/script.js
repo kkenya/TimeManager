@@ -12,7 +12,6 @@ const REST_STR = "　　　";
 let status;
 idb.open()
     .then(() => {
-        // todo do promise
         idb.getGoalOfSettings((goal) => {
             targetElement.innerHTML = goal;
         });
@@ -65,7 +64,7 @@ stateBtn.addEventListener("click", () => {
         stateLabel.style.color = "#ff6384"
         stateLabel.innerHTML = "活動中";
 
-        //todo わかりにくいので2つの処理をDB内で完結させる
+        //最後のデータにendTimeを追加する
         idb.getLastIdOfTimes()
             .then((id) => idb.editColumnOfTimes(id, now))
             .catch((reason) => console.error(reason));
@@ -73,7 +72,6 @@ stateBtn.addEventListener("click", () => {
 });
 
 locationBtn.addEventListener("click", () => {
-    //todo CROSにより現状不可能 window.open(gmaps.html)
     window.setTimeout(() => {
         //localStrageからactの割合が多いときに表示する場所を取得する
         const actPlaces = {
@@ -222,7 +220,6 @@ function setChat(callback) {
 
     idb.getRestTimeMsOfDate(today)
         .then((restTimeMs) => {
-            console.log(restTimeMs);
             // 一日分のグラフ    DailyChart(2Dcontext, number, , number)
             let dailyChart = new DailyChart(ctx2, restTimeMs, todaySleepMs);
             //休憩時間と睡眠時間の比率を計算する
