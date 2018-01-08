@@ -110,7 +110,6 @@ canvas {
 
 #state_btn {
     background-color: #FFF;
-    background-image: url("../images/rest.jpg");
     background-size: contain;
     background-repeat: no-repeat;
     background-position: 50% 50%;
@@ -122,6 +121,10 @@ canvas {
 
 #btn_text {
     font-size: 100px;
+}
+
+#state_label_box {
+    text-align: center;
 }
 
 #global_nav {
