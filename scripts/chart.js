@@ -88,6 +88,7 @@ class WeeklyChart {
     calculateTimesRate(restData) {
         for (let i = 0; i < restData.length; i++) {
             this.restData[i] = restData[i] / this.remainingTime[i] * 100;
+            this.restData[i] = Math.round(this.restData[i] * 10) / 10;
             this.activeData[i] = 100 - this.restData[i];
         }
     }
@@ -184,6 +185,7 @@ class DailyChart {
     // 時間を割合に直す
     calculateTimesRate(restData) {
         this.restData[0] = restData / this.remainingTime * 100;
+        this.restData[0] = Math.round(this.restData[0] * 10) / 10;
         this.restData[1] = 100 - this.restData[0];
     }
     // データの取得

@@ -289,18 +289,18 @@ class TimeManagerDB {
                 //7日間の分のデータが取得できなかったときにデフォルト値を格納する
                 if (weekData.dates.length < 7) {
                     const oneday = moment(today).startOf('week');
-                    const fullWeek = { dates: [], restTimes: [], sleepTimes: [] };
                     this.getDefaultSleepMsOfSettings((defaultSleepMs) => {
                         for (let i = 0; i < 7; i++) {
+                            const alternative = oneday.locale('ja').format('DD(ddd)');
                             //配列に含まれていない日があった時デフォルト値を挿入する
-                            if (weekData.dates[i] != oneday.locale('ja').format('DD(ddd)')) {
-                                fullWeek.dates.push(oneday.locale('ja').format('DD(ddd)'));
-                                fullWeek.restTimes.push(1000);
-                                fullWeek.sleepTimes.push(defaultSleepMs);
+                            if (weekData.dates[i] != alternative) {
+                                weekData.dates.splice(i, 0, alternative); //splice => i番目に引数3を追加する
+                                weekData.restTimes.splice(i, 0, 1000);
+                                weekData.sleepTimes.splice(i, 0, defaultSleepMs);
                             }
                             oneday.add(1, "days"); //破壊的なメソッド
                         }
-                        resolve(fullWeek);
+                        resolve(weekData);
                     });
                 }
                 else {
