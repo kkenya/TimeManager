@@ -34,7 +34,7 @@ function initModalWindow(destPlace) {
     });
 }
 
-function setUpdateGeolocation() {
+function updateGeoModalWindow() {
     const modalOpen = document.getElementById("location_update");
 
     // モーダルウィンドウの背景

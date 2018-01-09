@@ -34,6 +34,8 @@ idb.open()
         setChat((ration) => {
             setAdvice(ration);
         });
+        //modalWindow.js
+        updateGeoModalWindow();
     })
     .catch(error => console.error(error));
 
