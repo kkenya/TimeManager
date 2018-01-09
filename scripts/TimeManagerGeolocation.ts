@@ -39,21 +39,44 @@ class TimeManagerGeolocation {
     }
 
     public requestActPlaces(position: google.maps.LatLng): void {
-        const request: google.maps.places.TextSearchRequest = {
+        const cafeRequest: google.maps.places.TextSearchRequest = {
             location: position,
             radius: 1000, //max 50,000メートル
-            query: "カフェ　図書館",
+            query: "カフェ",
         };
 
-        this.service.textSearch(request, (results, status) => {
+        this.service.textSearch(cafeRequest, (results, status) => {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
-                localStorage.setItem("actLength", results.length.toString());
-                for (var i = 0; i < results.length; i++) {
+                localStorage.setItem("actCafeLength", results.length.toString());
+                for (let i = 0; i < results.length; i++) {
                     console.log(results[i]);
-                    const nameStr = `actName${i}`;
-                    const latStr = `actLat${i}`;
-                    const lngStr = `actLng${i}`;
-                    const placeIdStr = `actPlaceId${i}`;
+                    const nameStr = `actCafeName${i}`;
+                    const latStr = `actCafeLat${i}`;
+                    const lngStr = `actCafeLng${i}`;
+                    const placeIdStr = `actCafePlaceId${i}`;
+                    localStorage.setItem(nameStr, results[i].name);
+                    localStorage.setItem(latStr, results[i].geometry.location.lat().toString());
+                    localStorage.setItem(lngStr, results[i].geometry.location.lng().toString());
+                    localStorage.setItem(placeIdStr, results[i].place_id);
+                }
+            }
+        });
+
+        const libRequest: google.maps.places.TextSearchRequest = {
+            location: position,
+            radius: 1000, //max 50,000メートル
+            query: "図書館",
+        };
+
+        this.service.textSearch(libRequest, (results, status) => {
+            if (status == google.maps.places.PlacesServiceStatus.OK) {
+                localStorage.setItem("actLibLength", results.length.toString());
+                for (let i = 0; i < results.length; i++) {
+                    console.log(results[i]);
+                    const nameStr = `actLibName${i}`;
+                    const latStr = `actLibLat${i}`;
+                    const lngStr = `actLibLng${i}`;
+                    const placeIdStr = `actLibPlaceId${i}`;
                     localStorage.setItem(nameStr, results[i].name);
                     localStorage.setItem(latStr, results[i].geometry.location.lat().toString());
                     localStorage.setItem(lngStr, results[i].geometry.location.lng().toString());
@@ -73,7 +96,7 @@ class TimeManagerGeolocation {
         this.service.textSearch(request, (results, status) => {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
                 localStorage.setItem("restLength", results.length.toString());
-                for (var i = 0; i < results.length; i++) {
+                for (let i = 0; i < results.length; i++) {
                     console.log(results[i]);
                     const nameStr = `restName${i}`;
                     const latStr = `restLat${i}`;
@@ -92,7 +115,11 @@ class TimeManagerGeolocation {
         const marker = new google.maps.Marker({
             position: location,
             map: this.map,
-            title: name
+            title: name,
+            icon: {
+                url: "images/icon.png",
+                scaledSize: new google.maps.Size(40, 40)
+            }
         });
         const infowindow = new google.maps.InfoWindow({
             content: "現在地を取得しました"

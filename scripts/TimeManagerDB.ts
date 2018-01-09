@@ -203,7 +203,7 @@ class TimeManagerDB {
             const request: IDBRequest = index.get(date);
             request.onsuccess = event => {
                 const data = request.result;
-                if (data.restTimeMs) {
+                if (data) {
                     resolve(data.restTimeMs);
                 } else {
                     resolve(1000);
