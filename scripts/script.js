@@ -73,18 +73,36 @@ stateBtn.addEventListener("click", () => {
 
 locationBtn.addEventListener("click", () => {
     window.setTimeout(() => {
-        //localStrageからactの割合が多いときに表示する場所を取得する
+        //localStrageからactの割合が多いときに表示するカフェを取得する
         const actPlaces = {
             name: [],
             latLng: [],
             placeId: []
         };
-        const actLength = localStorage.getItem("actLength");
-        for (i = 0; i < parseInt(actLength); i++) {
-            const nameStr = `actName${i}`;
-            const latStr = `actLat${i}`;
-            const lngStr = `actLng${i}`;
-            const placeIdStr = `actPlaceId${i}`
+        const actCafeLength = localStorage.getItem("actCafeLength");
+        for (i = 0; i < parseInt(actCafeLength); i++) {
+            const nameStr = `actCafeName${i}`;
+            const latStr = `actCafeLat${i}`;
+            const lngStr = `actCafeLng${i}`;
+            const placeIdStr = `actCafePlaceId${i}`
+            const name = localStorage.getItem(nameStr);
+            const lat = parseFloat(localStorage.getItem(latStr));
+            const lng = parseFloat(localStorage.getItem(lngStr));
+            const placeId = localStorage.getItem(placeIdStr);
+            actPlaces.name.push(name);
+            actPlaces.latLng.push({
+                lat: lat,
+                lng: lng
+            });
+            actPlaces.placeId.push(placeId);
+        };
+        //localStrageからactの割合が多いときに表示する図書館を取得する
+        const actLibLength = localStorage.getItem("actLibLength");
+        for (i = 0; i < parseInt(actLibLength); i++) {
+            const nameStr = `actLibName${i}`;
+            const latStr = `actLibLat${i}`;
+            const lngStr = `actLibLng${i}`;
+            const placeIdStr = `actLibPlaceId${i}`
             const name = localStorage.getItem(nameStr);
             const lat = parseFloat(localStorage.getItem(latStr));
             const lng = parseFloat(localStorage.getItem(lngStr));
