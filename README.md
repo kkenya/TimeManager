@@ -4,6 +4,8 @@
 
 ## モバイルアプリケーション最終課題
 
+!2人で開発したものです!
+
 <div style="text-align: center;">
 <img src="https://github.com/kkenya/TimeManager/wiki/images/1.png" width="250" alt="トップページ">
 <img src="https://github.com/kkenya/TimeManager/wiki/images/3.png" width="250" alt="グラフ表示">
