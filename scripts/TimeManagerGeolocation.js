@@ -38,7 +38,6 @@ class TimeManagerGeolocation {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
                 localStorage.setItem("actCafeLength", results.length.toString());
                 for (let i = 0; i < results.length; i++) {
-                    console.log(results[i]);
                     const nameStr = `actCafeName${i}`;
                     const latStr = `actCafeLat${i}`;
                     const lngStr = `actCafeLng${i}`;
@@ -59,7 +58,6 @@ class TimeManagerGeolocation {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
                 localStorage.setItem("actLibLength", results.length.toString());
                 for (let i = 0; i < results.length; i++) {
-                    console.log(results[i]);
                     const nameStr = `actLibName${i}`;
                     const latStr = `actLibLat${i}`;
                     const lngStr = `actLibLng${i}`;
@@ -82,7 +80,6 @@ class TimeManagerGeolocation {
             if (status == google.maps.places.PlacesServiceStatus.OK) {
                 localStorage.setItem("restLength", results.length.toString());
                 for (let i = 0; i < results.length; i++) {
-                    console.log(results[i]);
                     const nameStr = `restName${i}`;
                     const latStr = `restLat${i}`;
                     const lngStr = `restLng${i}`;
