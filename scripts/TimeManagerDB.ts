@@ -444,9 +444,9 @@ class TimeManagerDB {
      * Settingsオブジェクトストアへレストの割合が多いときに表示する活動場所を保存する
      * @param places アドバイスに表示する場所(カフェ・図書館)
      */
-    public addActPlacesOfAdvices(places: { name: Array<string>, latLng: Array<{}> }): void {
+    public addActPlacesOfAdvices(places: { name: Array<string>, latLng: Array<{}> }, placeId: Array<string>): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.ADVICES_STORE, "readwrite");
-        const data = { id: 1, places: places };
+        const data = { id: 1, places: places, placeId: placeId };
         const request: IDBRequest = objectStore.put(data);
 
         request.onsuccess = event => console.log("places in Act added.");
@@ -457,9 +457,9 @@ class TimeManagerDB {
      * Settingsオブジェクトストアへアクティブの割合が多いときに表示する休憩場所を保存する
      * @param places アドバイスに表示する場所(飲食店)
      */
-    public addRestPlacesOfAdvices(places: { name: Array<string>, latLng: Array<{}> }): void {
+    public addRestPlacesOfAdvices(places: { name: Array<string>, latLng: Array<{}> }, placeId: Array<string>): void {
         const objectStore: IDBObjectStore = this.getObjectStore(this.ADVICES_STORE, "readwrite");
-        const data = { id: 2, places: places };
+        const data = { id: 2, places: places, placeId: placeId };
         const request: IDBRequest = objectStore.put(data);
 
         request.onsuccess = event => console.log("places in Rest added.");
