@@ -73,72 +73,12 @@ stateBtn.addEventListener("click", () => {
 
 locationBtn.addEventListener("click", () => {
     window.setTimeout(() => {
-        //localStrageからactの割合が多いときに表示するカフェを取得する
-        const actPlaces = {
-            name: [],
-            latLng: [],
-            placeId: []
-        };
-        const actCafeLength = localStorage.getItem("actCafeLength");
-        for (i = 0; i < parseInt(actCafeLength); i++) {
-            const nameStr = `actCafeName${i}`;
-            const latStr = `actCafeLat${i}`;
-            const lngStr = `actCafeLng${i}`;
-            const placeIdStr = `actCafePlaceId${i}`
-            const name = localStorage.getItem(nameStr);
-            const lat = parseFloat(localStorage.getItem(latStr));
-            const lng = parseFloat(localStorage.getItem(lngStr));
-            const placeId = localStorage.getItem(placeIdStr);
-            actPlaces.name.push(name);
-            actPlaces.latLng.push({
-                lat: lat,
-                lng: lng
-            });
-            actPlaces.placeId.push(placeId);
-        };
-        //localStrageからactの割合が多いときに表示する図書館を取得する
-        const actLibLength = localStorage.getItem("actLibLength");
-        for (i = 0; i < parseInt(actLibLength); i++) {
-            const nameStr = `actLibName${i}`;
-            const latStr = `actLibLat${i}`;
-            const lngStr = `actLibLng${i}`;
-            const placeIdStr = `actLibPlaceId${i}`
-            const name = localStorage.getItem(nameStr);
-            const lat = parseFloat(localStorage.getItem(latStr));
-            const lng = parseFloat(localStorage.getItem(lngStr));
-            const placeId = localStorage.getItem(placeIdStr);
-            actPlaces.name.push(name);
-            actPlaces.latLng.push({
-                lat: lat,
-                lng: lng
-            });
-            actPlaces.placeId.push(placeId);
-        };
-        //localStrageからrestの割合が多いときに表示する場所を取得する
-        const restPlaces = {
-            name: [],
-            latLng: [],
-            placeId: []
-        };
-        const restLength = localStorage.getItem("restLength");
-        for (i = 0; i < parseInt(restLength); i++) {
-            const nameStr = `restName${i}`;
-            const latStr = `restLat${i}`;
-            const lngStr = `restLng${i}`;
-            const placeIdStr = `restPlaceId${i}`
-            const name = localStorage.getItem(nameStr);
-            const lat = parseFloat(localStorage.getItem(latStr));
-            const lng = parseFloat(localStorage.getItem(lngStr));
-            const placeId = localStorage.getItem(placeIdStr);
-            restPlaces.name.push(name);
-            restPlaces.latLng.push({
-                lat: lat,
-                lng: lng
-            });
-            restPlaces.placeId.push(placeId);
-        };
+        getAroundInfo();
+
         idb.addActPlacesOfAdvices(actPlaces);
         idb.addRestPlacesOfAdvices(restPlaces);
+
+        location.reload();
     }, 5000);
 });
 
@@ -230,7 +170,6 @@ function setChat(callback) {
 
     idb.getWeekRecordOfDate(today)
         .then((weekData) => {
-            console.log(weekData);
             // 一週間のグラフ    WeeklyChart(2Dcontext, array(7)[num], array(7)[string], number)
             const weeklyChart = new WeeklyChart(ctx1, weekData.restTimes, weekData.dates, weekData.sleepTimes);
         })
@@ -255,7 +194,6 @@ function setChat(callback) {
 function setAdvice(ration) {
     if (ration.active > ration.rest) {
         idb.getActPlacesOfAdvices((places) => {
-            console.log(places);
             adviceElement.innerHTML = "気分転換しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {
@@ -267,7 +205,6 @@ function setAdvice(ration) {
         });
     } else {
         idb.getRestPlacesOfAdvices((places) => {
-            console.log(places);
             adviceElement.innerHTML = "休憩しませんか？";
             const randomNum = Math.floor(Math.random() * places.name.length); //0~places.name.lenght-1
             const destPlace = {
@@ -278,4 +215,71 @@ function setAdvice(ration) {
             initModalWindow(destPlace);
         });
     }
+}
+
+function getAroundInfo() {
+    //localStrageからactの割合が多いときに表示するカフェを取得する
+    const actPlaces = {
+        name: [],
+        latLng: [],
+        placeId: []
+    };
+    const actCafeLength = localStorage.getItem("actCafeLength");
+    for (i = 0; i < parseInt(actCafeLength); i++) {
+        const nameStr = `actCafeName${i}`;
+        const latStr = `actCafeLat${i}`;
+        const lngStr = `actCafeLng${i}`;
+        const placeIdStr = `actCafePlaceId${i}`
+        const name = localStorage.getItem(nameStr);
+        const lat = parseFloat(localStorage.getItem(latStr));
+        const lng = parseFloat(localStorage.getItem(lngStr));
+        const placeId = localStorage.getItem(placeIdStr);
+        actPlaces.name.push(name);
+        actPlaces.latLng.push({
+            lat: lat,
+            lng: lng
+        });
+        actPlaces.placeId.push(placeId);
+    };
+    //localStrageからactの割合が多いときに表示する図書館を取得する
+    const actLibLength = localStorage.getItem("actLibLength");
+    for (i = 0; i < parseInt(actLibLength); i++) {
+        const nameStr = `actLibName${i}`;
+        const latStr = `actLibLat${i}`;
+        const lngStr = `actLibLng${i}`;
+        const placeIdStr = `actLibPlaceId${i}`
+        const name = localStorage.getItem(nameStr);
+        const lat = parseFloat(localStorage.getItem(latStr));
+        const lng = parseFloat(localStorage.getItem(lngStr));
+        const placeId = localStorage.getItem(placeIdStr);
+        actPlaces.name.push(name);
+        actPlaces.latLng.push({
+            lat: lat,
+            lng: lng
+        });
+        actPlaces.placeId.push(placeId);
+    };
+    //localStrageからrestの割合が多いときに表示する場所を取得する
+    const restPlaces = {
+        name: [],
+        latLng: [],
+        placeId: []
+    };
+    const restLength = localStorage.getItem("restLength");
+    for (i = 0; i < parseInt(restLength); i++) {
+        const nameStr = `restName${i}`;
+        const latStr = `restLat${i}`;
+        const lngStr = `restLng${i}`;
+        const placeIdStr = `restPlaceId${i}`
+        const name = localStorage.getItem(nameStr);
+        const lat = parseFloat(localStorage.getItem(latStr));
+        const lng = parseFloat(localStorage.getItem(lngStr));
+        const placeId = localStorage.getItem(placeIdStr);
+        restPlaces.name.push(name);
+        restPlaces.latLng.push({
+            lat: lat,
+            lng: lng
+        });
+        restPlaces.placeId.push(placeId);
+    };
 }
