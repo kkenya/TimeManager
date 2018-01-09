@@ -42,14 +42,6 @@ class WeeklyChart {
                 position: 'nearest',
                 titleFontSize: 18,
                 bodyFontSize: 14,
-                callbacks: {
-                    label: function (tooltipItem, data) {
-                        return data.labels[tooltipItem.index] +
-                            ": " +
-                            data.datasets[0].data[tooltipItem.index] +
-                            " %";
-                    }
-                }
             }
         };
 
@@ -75,6 +67,7 @@ class WeeklyChart {
 
             this.calculateTimesRate(data);
             this.data = this.setChartData(this.activeData, this.restData);
+        }).then(() => {
             new Chart(ctx, {
                 type: "bar",
                 data: this.data,
@@ -88,6 +81,7 @@ class WeeklyChart {
     calculateTimesRate(restData) {
         for (let i = 0; i < restData.length; i++) {
             this.restData[i] = restData[i] / this.remainingTime[i] * 100;
+            // this.restData[i] = this.restData[i] * 10;
             this.restData[i] = Math.round(this.restData[i] * 10) / 10;
             this.activeData[i] = 100 - this.restData[i];
         }
