@@ -121,7 +121,7 @@ locationBtn.addEventListener("click", () => {
             placeId: []
         };
         const restLength = localStorage.getItem("restLength");
-        for (i = 0; i < parseInt(actLength); i++) {
+        for (i = 0; i < parseInt(restLength); i++) {
             const nameStr = `restName${i}`;
             const latStr = `restLat${i}`;
             const lngStr = `restLng${i}`;
