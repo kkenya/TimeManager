@@ -34,7 +34,6 @@ idb.open()
         setChat((ration) => {
             setAdvice(ration);
         });
-        setUpdateGeolocation();
     })
     .catch(error => console.error(error));
 
@@ -73,11 +72,7 @@ stateBtn.addEventListener("click", () => {
 
 locationBtn.addEventListener("click", () => {
     window.setTimeout(() => {
-        getAroundInfo();
-
-        idb.addActPlacesOfAdvices(actPlaces);
-        idb.addRestPlacesOfAdvices(restPlaces);
-
+        updateAroundInfo();
         location.reload();
     }, 5000);
 });
@@ -217,7 +212,7 @@ function setAdvice(ration) {
     }
 }
 
-function getAroundInfo() {
+function updateAroundInfo() {
     //localStrageからactの割合が多いときに表示するカフェを取得する
     const actPlaces = {
         name: [],
@@ -282,4 +277,8 @@ function getAroundInfo() {
         });
         restPlaces.placeId.push(placeId);
     };
+
+    idb.addActPlacesOfAdvices(actPlaces);
+    idb.addRestPlacesOfAdvices(restPlaces);
+
 }
