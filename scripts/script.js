@@ -75,7 +75,6 @@ stateBtn.addEventListener("click", () => {
 locationBtn.addEventListener("click", () => {
     window.setTimeout(() => {
         updateAroundInfo();
-        location.reload();
     }, 5000);
 });
 
