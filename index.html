@@ -9,9 +9,12 @@
     <!-- css -->
     <link rel="stylesheet" href="styles/reset.css">
     <link rel="stylesheet" href="styles/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.1.0/introjs.min.css" rel="stylesheet" type="text/css">
     <!-- js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment-with-locales.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/2.1.0/intro.min.js"></script>
+    <script src="scripts/introCookie.js" defer></script>
     <script src="scripts/chart.js"></script>
     <script src="scripts/scroll.js" defer></script>
     <script src="scripts/TimeManagerDB.js" defer></script>
@@ -24,7 +27,7 @@
     <div id="wrapper">
         <!-- top -->
         <header>
-            <h1>Time Manager</h1>
+            <h1 data-step='1' data-intro='ようこそ！まず簡単な操作方法の説明をします'>Time Manager </h1>
         </header>
         <nav id="global_nav">
             <form id="nav_form">
@@ -43,12 +46,12 @@
                     <span id="target">目標を設定しよう</span>
                     <hr>
                     <p id="advice"></p>
-                    <input type="button" id="openModalWindow" value="位置情報を記録しよう">
+                    <input type="button" id="openModalWindow" value="位置情報を記録しよう"data-step='4' data-intro='位置情報を登録することでおすすめのスポットが表示されます'>
                 </div>
-                <div class="card" id="state_label_box">
+                <div class="card" id="state_label_box" data-step='5' data-intro='現在のステータスです'>
                     <span id="state_label"></span>
                 </div>
-                <div id="state_btn" class="card">
+                <div id="state_btn" class="card" data-step='6' data-intro='ここをクリックすることで現在のステータスを入れ替えることができます'>
                     <span id="btn_text"></span>
                 </div>
             </section>
@@ -72,15 +75,15 @@
         <!-- setting -->
         <div id="setting" class="page">
             <section>
-                <div class="card">
+                <div class="card" data-step='2' data-intro='まず目標と位置情報の設定をしましょう'>
                     <h1 id="set_target">目標の設定</h1>
-                    <input type="text" id="todo_text">
+                    <input type="text" id="todo_text" >
                     <br>
                     <input type="button" id="set_todo" value="保存">
                     <h1>位置情報の設定</h1>
                     <input type="button" id="location_update" value="位置情報の更新">
                 </div>
-                <div class="card">
+                <div class="card" data-step='3' data-intro='次に睡眠時間の設定をしましょう'>
                     <h1>睡眠時間の設定</h1>
                     <p>睡眠時間
                         <span id="sleep_hour_output">00</span>:

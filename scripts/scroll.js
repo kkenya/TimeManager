@@ -36,6 +36,10 @@ document.getElementById("to_setting").addEventListener("click", eve => {
 document.getElementById("set_todo").addEventListener("click", eve => {
     smoothScroll(0);
 }, true);
+// 睡眠時間を設定するとグラフへ
+document.getElementById("submit_sleep_time").addEventListener("click", eve => {
+    smoothScroll(1);
+});
 
 let scrPos = 0;
 // スクロール位置の監視
